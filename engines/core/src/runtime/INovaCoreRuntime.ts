@@ -1,5 +1,7 @@
 import { ICoreModule } from "../modules/ICoreModule";
+import { IContainer } from "../container/IContainer";
 import { IEventBus } from "../events/IEventBus";
+import { RuntimeState } from "./RuntimeState";
 
 export interface INovaCoreRuntime {
 
@@ -12,9 +14,15 @@ export interface INovaCoreRuntime {
     ): void;
 
     resolve<T>(
-        serviceIdentifier: string | symbol
+        serviceIdentifier: symbol
     ): T;
 
     getEventBus(): IEventBus;
+
+    getContainer(): IContainer;
+
+    getState(): RuntimeState;
+
+    getRegisteredModules(): readonly ICoreModule[];
 
 }

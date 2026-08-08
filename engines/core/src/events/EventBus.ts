@@ -1,4 +1,8 @@
-import { IEventBus, IDomainEvent, IEventHandler } from "./IEventBus";
+import {
+    IEventBus,
+    IDomainEvent,
+    IEventHandler
+} from "./IEventBus";
 
 export class EventBus implements IEventBus {
 
@@ -27,12 +31,26 @@ export class EventBus implements IEventBus {
         const subscribers =
             this.handlers.get(event.eventType);
 
-        if (!subscribers || subscribers.length === 0) {
+        if (!subscribers) {
             return;
         }
 
         for (const handler of subscribers) {
-            await handler.handle(event);
+
+            try {
+
+                await handler.handle(event);
+
+            }
+            catch (error) {
+
+                console.error(
+                    `Event handler failed for '${event.eventType}'.`,
+                    error
+                );
+
+            }
+
         }
 
     }

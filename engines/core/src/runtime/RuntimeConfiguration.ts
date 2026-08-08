@@ -1,22 +1,23 @@
 /**
  * Nova X AI
+ * Nova Core
  * Runtime Configuration
  */
 
 export interface RuntimeConfiguration {
 
-    applicationName: string;
+    readonly applicationName: string;
 
-    version: string;
+    readonly version: string;
 
-    environment: string;
+    readonly environment: string;
 
-    debug: boolean;
+    readonly debug: boolean;
 
-    enableTelemetry: boolean;
+    readonly enableTelemetry: boolean;
 
-    enableDiagnostics: boolean;
+    readonly enableDiagnostics: boolean;
 
-    enableAnalytics: boolean;
+    readonly enableAnalytics: boolean;
 
 }

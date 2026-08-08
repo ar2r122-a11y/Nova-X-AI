@@ -2,11 +2,11 @@ import { INovaCoreRuntime } from "./INovaCoreRuntime";
 import { RuntimeConfiguration } from "./RuntimeConfiguration";
 import { RuntimeState } from "./RuntimeState";
 
-import { Container } from "../container/Container";
 import { IContainer } from "../container/IContainer";
+import { Container } from "../container/Container";
 
-import { EventBus } from "../events/EventBus";
 import { IEventBus } from "../events/IEventBus";
+import { EventBus } from "../events/EventBus";
 
 import { ModuleRegistry } from "../modules/ModuleRegistry";
 import { ICoreModule } from "../modules/ICoreModule";
@@ -34,6 +34,7 @@ export class NovaCoreRuntime implements INovaCoreRuntime {
         this.state = RuntimeState.Created;
 
     }
+
     public async initialize(): Promise<void> {
 
         if (this.state !== RuntimeState.Created) {
@@ -42,7 +43,9 @@ export class NovaCoreRuntime implements INovaCoreRuntime {
 
         this.state = RuntimeState.Initializing;
 
-        for (const module of this.moduleRegistry.getAll()) {
+        const modules = this.moduleRegistry.getAll();
+
+        for (const module of modules) {
 
             module.configureServices(
                 this.container
@@ -50,7 +53,7 @@ export class NovaCoreRuntime implements INovaCoreRuntime {
 
         }
 
-        for (const module of this.moduleRegistry.getAll()) {
+        for (const module of modules) {
 
             await module.onInit();
 
@@ -68,10 +71,10 @@ export class NovaCoreRuntime implements INovaCoreRuntime {
 
         this.state = RuntimeState.Stopping;
 
-        const modules =
-            this.moduleRegistry
-                .getAll()
-                .reverse();
+        const modules = this
+            .moduleRegistry
+            .getAll()
+            .reverse();
 
         for (const module of modules) {
 
@@ -94,11 +97,11 @@ export class NovaCoreRuntime implements INovaCoreRuntime {
     }
 
     public resolve<T>(
-        serviceIdentifier: string | symbol
+        serviceIdentifier: symbol
     ): T {
 
-        return this.container.resolve(
-            serviceIdentifier as symbol
+        return this.container.resolve<T>(
+            serviceIdentifier
         );
 
     }
@@ -120,3 +123,5 @@ export class NovaCoreRuntime implements INovaCoreRuntime {
         return this.state;
 
     }
+
+}

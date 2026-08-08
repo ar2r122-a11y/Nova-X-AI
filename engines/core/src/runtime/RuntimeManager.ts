@@ -1,40 +1,44 @@
+import { NovaCoreRuntime } from "./NovaCoreRuntime";
 import { RuntimeState } from "./RuntimeState";
-import { RuntimeConfiguration } from "./RuntimeConfiguration";
+
+import { ModuleRegistry } from "../modules/ModuleRegistry";
+import { ModuleLifecycleManager } from "../lifecycle/ModuleLifecycleManager";
 
 export class RuntimeManager {
 
-    private state: RuntimeState =
-        RuntimeState.Created;
-
     constructor(
-        private readonly configuration: RuntimeConfiguration
+        private readonly runtime: NovaCoreRuntime,
+        private readonly registry: ModuleRegistry,
+        private readonly lifecycleManager: ModuleLifecycleManager
     ) {}
 
-    public getConfiguration(): RuntimeConfiguration {
+    public async start(): Promise<void> {
 
-        return this.configuration;
+        if (this.runtime.getState() !== RuntimeState.Created) {
+            return;
+        }
 
-    }
+        for (const module of this.registry.getAll()) {
+            this.lifecycleManager.register(module);
+        }
 
-    public getState(): RuntimeState {
-
-        return this.state;
-
-    }
-
-    public async initialize(): Promise<void> {
-
-        this.state = RuntimeState.Initializing;
-
-        this.state = RuntimeState.Running;
+        await this.runtime.initialize();
 
     }
 
-    public async shutdown(): Promise<void> {
+    public async stop(): Promise<void> {
 
-        this.state = RuntimeState.Stopping;
+        if (this.runtime.getState() !== RuntimeState.Running) {
+            return;
+        }
 
-        this.state = RuntimeState.Stopped;
+        await this.runtime.shutdown();
+
+    }
+
+    public getRuntime(): NovaCoreRuntime {
+
+        return this.runtime;
 
     }
 

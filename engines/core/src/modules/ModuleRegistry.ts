@@ -29,7 +29,7 @@ export class ModuleRegistry {
 
     }
 
-    public getAll(): ICoreModule[] {
+    public getAll(): readonly ICoreModule[] {
 
         return [...this.modules.values()];
 
@@ -54,6 +54,12 @@ export class ModuleRegistry {
     public clear(): void {
 
         this.modules.clear();
+
+    }
+
+    public get count(): number {
+
+        return this.modules.size;
 
     }
 
