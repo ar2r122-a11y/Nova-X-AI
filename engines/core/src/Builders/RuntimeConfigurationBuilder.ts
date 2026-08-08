@@ -1,49 +1,94 @@
 import { RuntimeConfiguration } from "../runtime/RuntimeConfiguration";
 
+/**
+ * Nova X AI
+ * Nova Core
+ * RuntimeConfigurationBuilder
+ *
+ * Fluent builder for RuntimeConfiguration.
+ * SDS §1: config includes maxBackgroundWorkers: 8 and eventBusQueueLimit: 1000.
+ */
 export class RuntimeConfigurationBuilder {
 
-    private environment = "production";
+    private _applicationName = "nova-x-ai";
 
-    private readonly featureFlags =
-        new Map<string, boolean>();
+    private _version = "0.1.0";
 
-    private readonly enabledModules: string[] = [];
+    private _environment = "production";
+
+    private _debug = false;
+
+    private _enableTelemetry = true;
+
+    private _enableDiagnostics = true;
+
+    private _enableAnalytics = true;
+
+    public withApplicationName(
+        applicationName: string
+    ): this {
+
+        this._applicationName = applicationName;
+
+        return this;
+
+    }
+
+    public withVersion(
+        version: string
+    ): this {
+
+        this._version = version;
+
+        return this;
+
+    }
 
     public withEnvironment(
         environment: string
     ): this {
 
-        this.environment = environment;
+        this._environment = environment;
 
         return this;
 
     }
 
-    public setFeatureFlag(
-        flag: string,
+    public withDebug(
+        debug: boolean
+    ): this {
+
+        this._debug = debug;
+
+        return this;
+
+    }
+
+    public withTelemetry(
         enabled: boolean
     ): this {
 
-        this.featureFlags.set(
-            flag,
-            enabled
-        );
+        this._enableTelemetry = enabled;
 
         return this;
 
     }
 
-    public addModule(
-        moduleName: string
+    public withDiagnostics(
+        enabled: boolean
     ): this {
 
-        if (!this.enabledModules.includes(moduleName)) {
+        this._enableDiagnostics = enabled;
 
-            this.enabledModules.push(
-                moduleName
-            );
+        return this;
 
-        }
+    }
+
+    public withAnalytics(
+        enabled: boolean
+    ): this {
+
+        this._enableAnalytics = enabled;
 
         return this;
 
@@ -53,15 +98,19 @@ export class RuntimeConfigurationBuilder {
 
         return Object.freeze({
 
-            environment: this.environment,
+            applicationName: this._applicationName,
 
-            featureFlags: new Map(
-                this.featureFlags
-            ),
+            version: this._version,
 
-            enabledModules: [
-                ...this.enabledModules
-            ]
+            environment: this._environment,
+
+            debug: this._debug,
+
+            enableTelemetry: this._enableTelemetry,
+
+            enableDiagnostics: this._enableDiagnostics,
+
+            enableAnalytics: this._enableAnalytics
 
         });
 

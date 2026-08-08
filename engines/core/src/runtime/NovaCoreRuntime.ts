@@ -71,10 +71,7 @@ export class NovaCoreRuntime implements INovaCoreRuntime {
 
         this.state = RuntimeState.Stopping;
 
-        const modules = this
-            .moduleRegistry
-            .getAll()
-            .reverse();
+        const modules = [...this.moduleRegistry.getAll()].reverse();
 
         for (const module of modules) {
 
@@ -93,6 +90,12 @@ export class NovaCoreRuntime implements INovaCoreRuntime {
         this.moduleRegistry.register(
             module
         );
+
+    }
+
+    public getRegisteredModules(): readonly ICoreModule[] {
+
+        return this.moduleRegistry.getAll();
 
     }
 

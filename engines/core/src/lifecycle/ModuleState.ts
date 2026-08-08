@@ -1,59 +1,24 @@
-import { CorrelationId } from "../value-objects/CorrelationId";
-import { ModuleVersion } from "../value-objects/ModuleVersion";
-import { ModuleState } from "../../lifecycle/ModuleState";
+/**
+ * Nova X AI
+ * Nova Core
+ * Module Lifecycle State
+ *
+ * Represents the lifecycle state of a registered module
+ * within the Nova Core runtime.
+ */
 
-export class ModuleRegistrationEntity {
+export enum ModuleState {
 
-    public readonly id: CorrelationId;
+    Registered = "Registered",
 
-    public readonly moduleName: string;
+    Initializing = "Initializing",
 
-    public readonly version: ModuleVersion;
+    Running = "Running",
 
-    private state: ModuleState;
+    Stopping = "Stopping",
 
-    constructor(
-        id: CorrelationId,
-        moduleName: string,
-        version: ModuleVersion
-    ) {
+    Stopped = "Stopped",
 
-        if (!moduleName.trim()) {
-            throw new Error("Module name cannot be empty.");
-        }
-
-        this.id = id;
-        this.moduleName = moduleName;
-        this.version = version;
-
-        this.state = ModuleState.Registered;
-
-    }
-
-    public getStatus(): ModuleState {
-
-        return this.state;
-
-    }
-
-    public setStatus(
-        state: ModuleState
-    ): void {
-
-        this.state = state;
-
-    }
-
-    public isRunning(): boolean {
-
-        return this.state === ModuleState.Running;
-
-    }
-
-    public isFailed(): boolean {
-
-        return this.state === ModuleState.Failed;
-
-    }
+    Failed = "Failed"
 
 }
