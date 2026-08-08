@@ -4,8 +4,6 @@
  * Dependency Injection Container Contract
  */
 
-import { ServiceLifetime } from "./ServiceLifetime";
-
 export interface IContainer {
     registerSingleton<T>(
         token: symbol,

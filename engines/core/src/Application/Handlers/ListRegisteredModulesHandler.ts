@@ -15,7 +15,7 @@ implements IQueryHandler<
     ) {}
 
     public async handle(
-        query: ListRegisteredModulesQuery
+        _query: ListRegisteredModulesQuery
     ): Promise<readonly RegisteredModuleDto[]> {
 
         return this.runtime

@@ -3,7 +3,7 @@ import { InitializeKernelCommand } from "../Commands/InitializeKernelCommand";
 export class InitializeKernelValidator {
 
     public validate(
-        command: InitializeKernelCommand
+        _command: InitializeKernelCommand
     ): void {
 
         // Reserved for future validation.

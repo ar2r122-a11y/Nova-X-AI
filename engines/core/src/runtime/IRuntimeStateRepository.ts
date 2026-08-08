@@ -7,4 +7,4 @@
  * This file re-exports it to preserve any existing imports from
  * the runtime/ path without creating a duplicate definition.
  */
-export { IRuntimeStateRepository } from "../Contracts/IRuntimeStateRepository";
+export type { IRuntimeStateRepository } from "../Contracts/IRuntimeStateRepository";

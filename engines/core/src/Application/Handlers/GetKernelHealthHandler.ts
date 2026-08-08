@@ -15,7 +15,7 @@ implements IQueryHandler<
     ) {}
 
     public async handle(
-        query: GetKernelHealthQuery
+        _query: GetKernelHealthQuery
     ): Promise<KernelHealthDto> {
 
         return new KernelHealthDto(

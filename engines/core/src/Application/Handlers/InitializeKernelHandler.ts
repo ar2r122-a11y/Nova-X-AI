@@ -10,7 +10,7 @@ implements ICommandHandler<InitializeKernelCommand> {
     ) {}
 
     public async handle(
-        command: InitializeKernelCommand
+        _command: InitializeKernelCommand
     ): Promise<void> {
 
         await this.runtime.initialize();

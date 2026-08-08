@@ -10,7 +10,7 @@ implements ICommandHandler<ShutdownKernelCommand> {
     ) {}
 
     public async handle(
-        command: ShutdownKernelCommand
+        _command: ShutdownKernelCommand
     ): Promise<void> {
 
         await this.runtime.shutdown();
