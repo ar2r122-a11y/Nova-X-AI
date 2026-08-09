@@ -6,15 +6,11 @@ export class NovaCoreRuntime implements INovaRuntime {
 
     private state: RuntimeState = RuntimeState.Uninitialized;
 
-    private configuration?: RuntimeConfiguration;
-
     public async initialize(
-        configuration: RuntimeConfiguration
+        _configuration: RuntimeConfiguration
     ): Promise<void> {
 
         this.state = RuntimeState.Bootstrapping;
-
-        this.configuration = configuration;
 
         this.state = RuntimeState.Running;
     }
