@@ -12,6 +12,7 @@ import { ModuleRegistry } from "../modules/ModuleRegistry";
 import { ICoreModule } from "../modules/ICoreModule";
 
 import { ModuleDependencyValidator } from "../Policies/ModuleDependencyValidator";
+import { FaultIsolationPolicy } from "../Policies/FaultIsolationPolicy";
 
 import { BackgroundScheduler } from "../scheduler/BackgroundScheduler";
 
@@ -29,6 +30,8 @@ export class NovaCoreRuntime implements INovaCoreRuntime {
     private readonly moduleDependencyValidator: ModuleDependencyValidator;
 
     private readonly scheduler: BackgroundScheduler;
+
+    private readonly faultIsolationPolicy: FaultIsolationPolicy;
 
     private state: RuntimeState;
 
@@ -50,6 +53,9 @@ export class NovaCoreRuntime implements INovaCoreRuntime {
             configuration.maxBackgroundWorkers
         );
 
+        this.faultIsolationPolicy =
+            new FaultIsolationPolicy();
+
         this.state = RuntimeState.Created;
     }
 
@@ -65,14 +71,37 @@ export class NovaCoreRuntime implements INovaCoreRuntime {
                 this.moduleRegistry.getAll()
             );
 
+        const failures: string[] = [];
+
         for (const module of modules) {
-            module.configureServices(
-                this.container
-            );
+            const success =
+                await this.faultIsolationPolicy.execute(
+                    async () => {
+                        module.configureServices(
+                            this.container
+                        );
+                    },
+                    module.moduleName
+                );
+
+            if (!success) {
+                failures.push(module.moduleName);
+            }
         }
 
         for (const module of modules) {
-            await module.onInit();
+            const success =
+                await this.faultIsolationPolicy.execute(
+                    async () => {
+                        await module.onInit();
+                    },
+                    module.moduleName
+                );
+
+            if (!success) {
+                failures.push(module.moduleName);
+                continue;
+            }
 
             await this.eventBus.publish(
                 new ModuleLoadedEvent(
@@ -83,6 +112,12 @@ export class NovaCoreRuntime implements INovaCoreRuntime {
         }
 
         await this.scheduler.start();
+
+        if (failures.length > 0) {
+            this.state = RuntimeState.Failed;
+
+            return;
+        }
 
         await this.eventBus.publish(
             new KernelInitializedEvent(
@@ -100,7 +135,10 @@ export class NovaCoreRuntime implements INovaCoreRuntime {
     }
 
     public async shutdown(): Promise<void> {
-        if (this.state !== RuntimeState.Running) {
+        if (
+            this.state !== RuntimeState.Running &&
+            this.state !== RuntimeState.Failed
+        ) {
             return;
         }
 

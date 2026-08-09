@@ -149,11 +149,34 @@ describe("Container", () => {
 
     describe("createScope", () => {
 
-        it("returns a new independent container", () => {
+        it("inherits registrations from parent", () => {
             const token = Symbol("ServiceA");
             container.registerSingleton(token, ServiceA);
             const scope = container.createScope();
-            expect(scope.isRegistered(token)).toBe(false);
+            expect(scope.isRegistered(token)).toBe(true);
+        });
+
+        it("can resolve a parent-registered service from scope", () => {
+            const token = Symbol("ServiceA");
+            container.registerSingleton(token, ServiceA);
+            const scope = container.createScope();
+            expect(scope.resolve<ServiceA>(token)).toBeInstanceOf(ServiceA);
+        });
+
+        it("allows scope-specific overrides without affecting parent", () => {
+            const token = Symbol("ServiceA");
+            container.registerSingleton(token, ServiceA);
+            const scope = container.createScope();
+
+            class OverriddenServiceA extends ServiceA {
+                public readonly overridden = true;
+            }
+
+            scope.registerSingleton(token, OverriddenServiceA);
+            const parentInstance = container.resolve<ServiceA>(token);
+            const scopeInstance = scope.resolve<ServiceA>(token);
+            expect(parentInstance).toBeInstanceOf(ServiceA);
+            expect(scopeInstance).toBeInstanceOf(OverriddenServiceA);
         });
 
     });

@@ -7,6 +7,12 @@ export class Container implements IContainer {
 
     private readonly services = new Map<symbol, ServiceDescriptor>();
 
+    private readonly parent?: Container;
+
+    constructor(parent?: Container) {
+        this.parent = parent;
+    }
+
     registerSingleton<T>(
         token: symbol,
         implementation: new (...args: any[]) => T
@@ -87,6 +93,10 @@ export class Container implements IContainer {
         const descriptor = this.services.get(token);
 
         if (!descriptor) {
+            if (this.parent) {
+                return this.parent.resolve<T>(token);
+            }
+
             throw new ContainerException(
                 `Service not found: ${token.toString()}`
             );
@@ -125,7 +135,15 @@ export class Container implements IContainer {
         token: symbol
     ): boolean {
 
-        return this.services.has(token);
+        if (this.services.has(token)) {
+            return true;
+        }
+
+        if (this.parent) {
+            return this.parent.isRegistered(token);
+        }
+
+        return false;
 
     }
 
@@ -145,7 +163,7 @@ export class Container implements IContainer {
 
     createScope(): IContainer {
 
-        return new Container();
+        return new Container(this);
 
     }
 

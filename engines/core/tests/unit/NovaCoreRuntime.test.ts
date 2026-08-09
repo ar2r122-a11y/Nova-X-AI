@@ -396,4 +396,108 @@ describe("NovaCoreRuntime", () => {
         expect(received[0].eventType).toBe("KernelShutdownEvent");
     });
 
+    // -- Fault Isolation --
+
+    it("transitions to Failed when a module onInit throws", async () => {
+        const good = makeModule("good", {
+            onInit: async () => {}
+        });
+
+        const bad = makeModule("bad", {
+            onInit: async () => {
+                throw new Error("init failure");
+            }
+        });
+
+        runtime.registerModule(good);
+        runtime.registerModule(bad);
+
+        await runtime.initialize();
+
+        expect(runtime.getState()).toBe(
+            RuntimeState.Failed
+        );
+    });
+
+    it("continues initializing remaining modules after a failure", async () => {
+        const order: string[] = [];
+
+        const good1 = makeModule("good1", {
+            onInit: async () => {
+                order.push("good1");
+            }
+        });
+
+        const bad = makeModule("bad", {
+            onInit: async () => {
+                throw new Error("init failure");
+            }
+        });
+
+        const good2 = makeModule("good2", {
+            onInit: async () => {
+                order.push("good2");
+            }
+        });
+
+        runtime.registerModule(good1);
+        runtime.registerModule(bad);
+        runtime.registerModule(good2);
+
+        await runtime.initialize();
+
+        expect(order).toEqual([
+            "good1",
+            "good2"
+        ]);
+    });
+
+    it("does not publish ModuleLoadedEvent for a failed module", async () => {
+        const good = makeModule("good", {
+            onInit: async () => {}
+        });
+
+        const bad = makeModule("bad", {
+            onInit: async () => {
+                throw new Error("init failure");
+            }
+        });
+
+        runtime.registerModule(good);
+        runtime.registerModule(bad);
+
+        const received: string[] = [];
+        runtime.getEventBus().subscribe("ModuleLoadedEvent", {
+            handle: async (event: any) => {
+                received.push(event.moduleName);
+            }
+        });
+
+        await runtime.initialize();
+
+        expect(received).toEqual(["good"]);
+    });
+
+    it("shutdown() from Failed state cleans up and transitions to Stopped", async () => {
+        const mod = makeModule("alpha", {
+            onInit: async () => {
+                throw new Error("init failure");
+            }
+        });
+
+        runtime.registerModule(mod);
+
+        await runtime.initialize();
+
+        expect(runtime.getState()).toBe(
+            RuntimeState.Failed
+        );
+
+        await runtime.shutdown();
+
+        expect(runtime.getState()).toBe(
+            RuntimeState.Stopped
+        );
+    });
+
 });
