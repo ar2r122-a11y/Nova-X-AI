@@ -91,4 +91,29 @@ describe("EventBus", () => {
         expect(succeeding).toHaveBeenCalledOnce();
     });
 
+    // -- Queue Limit --
+
+    it("respects queue limit with backpressure", async () => {
+        const limitedBus = new EventBus(2);
+        const handler = vi.fn().mockResolvedValue(undefined);
+        limitedBus.subscribe<TestEvent>("TestEvent", { handle: handler });
+
+        const event = makeTestEvent("slow");
+        const publishPromise = limitedBus.publish(event);
+
+        const secondEvent = makeTestEvent("fast");
+        const secondPromise = limitedBus.publish(secondEvent);
+
+        await Promise.all([publishPromise, secondPromise]);
+
+        expect(handler).toHaveBeenCalledTimes(2);
+    });
+
+    it("does not accept publishes after shutdown", async () => {
+        await bus.shutdown();
+        await expect(
+            bus.publish(makeTestEvent("after-shutdown"))
+        ).rejects.toThrow("EventBus is stopped");
+    });
+
 });

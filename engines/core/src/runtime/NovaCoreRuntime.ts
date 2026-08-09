@@ -13,28 +13,42 @@ import { ICoreModule } from "../modules/ICoreModule";
 
 import { ModuleDependencyValidator } from "../Policies/ModuleDependencyValidator";
 
+import { BackgroundScheduler } from "../scheduler/BackgroundScheduler";
+
+import { KernelInitializedEvent } from "../events/lifecycle/KernelInitializedEvent";
+import { KernelShutdownEvent } from "../events/lifecycle/KernelShutdownEvent";
+import { ModuleLoadedEvent } from "../events/lifecycle/ModuleLoadedEvent";
+
 export class NovaCoreRuntime implements INovaCoreRuntime {
     private readonly container: IContainer;
 
-    private readonly eventBus: IEventBus;
+    private readonly eventBus: EventBus;
 
     private readonly moduleRegistry: ModuleRegistry;
 
     private readonly moduleDependencyValidator: ModuleDependencyValidator;
 
+    private readonly scheduler: BackgroundScheduler;
+
     private state: RuntimeState;
 
     constructor(
-        _configuration: RuntimeConfiguration
+        configuration: RuntimeConfiguration
     ) {
         this.container = new Container();
 
-        this.eventBus = new EventBus();
+        this.eventBus = new EventBus(
+            configuration.eventBusQueueLimit
+        );
 
         this.moduleRegistry = new ModuleRegistry();
 
         this.moduleDependencyValidator =
             new ModuleDependencyValidator();
+
+        this.scheduler = new BackgroundScheduler(
+            configuration.maxBackgroundWorkers
+        );
 
         this.state = RuntimeState.Created;
     }
@@ -59,7 +73,28 @@ export class NovaCoreRuntime implements INovaCoreRuntime {
 
         for (const module of modules) {
             await module.onInit();
+
+            await this.eventBus.publish(
+                new ModuleLoadedEvent(
+                    module.moduleName,
+                    this.generateCorrelationId()
+                )
+            );
         }
+
+        await this.scheduler.start();
+
+        await this.eventBus.publish(
+            new KernelInitializedEvent(
+                {
+                    timestamp: Date.now(),
+                    registeredModulesCount:
+                        this.moduleRegistry.count,
+                    runtimeVersion: "0.1.0"
+                },
+                this.generateCorrelationId()
+            )
+        );
 
         this.state = RuntimeState.Running;
     }
@@ -70,6 +105,16 @@ export class NovaCoreRuntime implements INovaCoreRuntime {
         }
 
         this.state = RuntimeState.Stopping;
+
+        await this.eventBus.publish(
+            new KernelShutdownEvent(
+                this.generateCorrelationId()
+            )
+        );
+
+        await this.eventBus.shutdown();
+
+        await this.scheduler.stop();
 
         const modules =
             [
@@ -114,4 +159,9 @@ export class NovaCoreRuntime implements INovaCoreRuntime {
     public getState(): RuntimeState {
         return this.state;
     }
+
+    private generateCorrelationId(): string {
+        return `nova-core-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+    }
+
 }

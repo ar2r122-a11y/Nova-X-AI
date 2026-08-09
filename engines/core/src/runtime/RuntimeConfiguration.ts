@@ -20,4 +20,8 @@ export interface RuntimeConfiguration {
 
     readonly enableAnalytics: boolean;
 
+    readonly maxBackgroundWorkers: number;
+
+    readonly eventBusQueueLimit: number;
+
 }

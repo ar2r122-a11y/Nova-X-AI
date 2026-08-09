@@ -24,6 +24,10 @@ export class RuntimeConfigurationBuilder {
 
     private _enableAnalytics = true;
 
+    private _maxBackgroundWorkers = 8;
+
+    private _eventBusQueueLimit = 1000;
+
     public withApplicationName(
         applicationName: string
     ): this {
@@ -94,6 +98,26 @@ export class RuntimeConfigurationBuilder {
 
     }
 
+    public withMaxBackgroundWorkers(
+        maxBackgroundWorkers: number
+    ): this {
+
+        this._maxBackgroundWorkers = maxBackgroundWorkers;
+
+        return this;
+
+    }
+
+    public withEventBusQueueLimit(
+        eventBusQueueLimit: number
+    ): this {
+
+        this._eventBusQueueLimit = eventBusQueueLimit;
+
+        return this;
+
+    }
+
     public build(): RuntimeConfiguration {
 
         return Object.freeze({
@@ -110,7 +134,11 @@ export class RuntimeConfigurationBuilder {
 
             enableDiagnostics: this._enableDiagnostics,
 
-            enableAnalytics: this._enableAnalytics
+            enableAnalytics: this._enableAnalytics,
+
+            maxBackgroundWorkers: this._maxBackgroundWorkers,
+
+            eventBusQueueLimit: this._eventBusQueueLimit
 
         });
 

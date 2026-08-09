@@ -335,4 +335,65 @@ describe("NovaCoreRuntime", () => {
             expect(elapsed).toBeLessThan(500);
         }
     );
+
+    // -- Lifecycle events --
+
+    it("publishes KernelInitializedEvent after successful initialization", async () => {
+        const mod = makeModule("alpha");
+
+        runtime.registerModule(mod);
+
+        const received: any[] = [];
+        runtime.getEventBus().subscribe("KernelInitializedEvent", {
+            handle: async (event: any) => {
+                received.push(event);
+            }
+        });
+
+        await runtime.initialize();
+
+        expect(received).toHaveLength(1);
+        expect(received[0].eventType).toBe("KernelInitializedEvent");
+        expect(received[0].registeredModulesCount).toBe(1);
+    });
+
+    it("publishes ModuleLoadedEvent for each initialized module", async () => {
+        const alpha = makeModule("alpha");
+        const beta = makeModule("beta");
+
+        runtime.registerModule(alpha);
+        runtime.registerModule(beta);
+
+        const received: string[] = [];
+        runtime.getEventBus().subscribe("ModuleLoadedEvent", {
+            handle: async (event: any) => {
+                received.push(event.moduleName);
+            }
+        });
+
+        await runtime.initialize();
+
+        expect(received).toEqual(["alpha", "beta"]);
+    });
+
+    it("publishes KernelShutdownEvent after shutdown", async () => {
+        const mod = makeModule("alpha");
+
+        runtime.registerModule(mod);
+
+        await runtime.initialize();
+
+        const received: any[] = [];
+        runtime.getEventBus().subscribe("KernelShutdownEvent", {
+            handle: async (event: any) => {
+                received.push(event);
+            }
+        });
+
+        await runtime.shutdown();
+
+        expect(received).toHaveLength(1);
+        expect(received[0].eventType).toBe("KernelShutdownEvent");
+    });
+
 });

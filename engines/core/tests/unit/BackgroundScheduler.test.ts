@@ -101,4 +101,75 @@ describe("BackgroundScheduler", () => {
         expect(task).toHaveBeenCalledOnce();
     });
 
+    // -- Worker Pool --
+
+    it("respects maxWorkers concurrency limit", async () => {
+        vi.useFakeTimers();
+        const pool = new BackgroundScheduler(2);
+        await pool.start();
+
+        let active = 0;
+        let maxActive = 0;
+
+        const task = vi.fn().mockImplementation(async () => {
+            active++;
+            maxActive = Math.max(maxActive, active);
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            active--;
+        });
+
+        pool.schedule("heartbeat", task, 100);
+
+        vi.advanceTimersByTime(100);
+        await Promise.resolve();
+        expect(maxActive).toBe(1);
+
+        vi.advanceTimersByTime(100);
+        await Promise.resolve();
+        expect(maxActive).toBe(2);
+
+        vi.advanceTimersByTime(100);
+        await Promise.resolve();
+        expect(maxActive).toBe(2);
+
+        pool.stop();
+        vi.useRealTimers();
+    });
+
+    it("isolates failures in scheduled tasks", async () => {
+        await scheduler.start();
+        const failing = vi.fn().mockRejectedValue(new Error("task failure"));
+        const succeeding = vi.fn().mockResolvedValue(undefined);
+
+        scheduler.schedule("fail", failing, 1000);
+        scheduler.schedule("success", succeeding, 1000);
+
+        vi.advanceTimersByTime(1000);
+        await Promise.resolve();
+
+        expect(failing).toHaveBeenCalledOnce();
+        expect(succeeding).toHaveBeenCalledOnce();
+    });
+
+    it("drains in-flight tasks on stop", async () => {
+        vi.useRealTimers();
+        const pool = new BackgroundScheduler(1);
+        await pool.start();
+
+        let finished = false;
+        const task = vi.fn().mockImplementation(async () => {
+            await new Promise(resolve => setTimeout(resolve, 50));
+            finished = true;
+        });
+
+        pool.schedule("long", task, 10);
+
+        await new Promise(resolve => setTimeout(resolve, 20));
+        expect(task).toHaveBeenCalledTimes(1);
+        expect(finished).toBe(false);
+
+        await pool.stop();
+        expect(finished).toBe(true);
+    });
+
 });
