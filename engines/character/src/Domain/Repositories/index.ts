@@ -1,0 +1,2 @@
+
+export { CharacterAggregate } from "../Aggregates";
