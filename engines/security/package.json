@@ -1,0 +1,23 @@
+{
+  "name": "@nova-x-ai/security",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Nova Security Engine — zero-trust authentication, RBAC/ABAC, crypto, and audit for Nova X AI",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "@nova-x-ai/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^24.3.0",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  }
+}
