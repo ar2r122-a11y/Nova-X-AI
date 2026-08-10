@@ -22,6 +22,9 @@ export { Container } from "./container/Container";
 export { ServiceLifetime } from "./container/ServiceLifetime";
 export { ContainerException } from "./container/ContainerException";
 
+// Application (CQRS)
+export * from "./Application";
+
 // Event Bus
 export type { IEventBus, IDomainEvent, IEventHandler } from "./events/IEventBus";
 export { EventBus } from "./events/EventBus";
