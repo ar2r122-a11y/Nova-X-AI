@@ -15,7 +15,12 @@
     "moduleDetection": "force",
     "noEmit": true,
     "esModuleInterop": true,
-    "declaration": false
+    "declaration": false,
+    "baseUrl": ".",
+    "paths": {
+      "@nova-x-ai/core": ["../../core/src"],
+      "@nova-x-ai/storage": ["../../storage/src"]
+    }
   },
   "include": [
     "src/**/*",

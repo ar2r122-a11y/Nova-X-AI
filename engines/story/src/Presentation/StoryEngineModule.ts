@@ -8,7 +8,34 @@ import { ProjectionEngine } from "../Infrastructure/Projections/ProjectionEngine
 import { StoryProjectionReadRepository } from "../Infrastructure/Projections/StoryProjectionReadRepository";
 import { SnapshotManager } from "../Infrastructure/Snapshots/SnapshotManager";
 import { SnapshotRepository } from "../Infrastructure/Snapshots/SnapshotRepository";
+import { StorySecurityBoundary } from "../Infrastructure/Security/StorySecurityBoundary";
+import { StoryEngineAclTranslator } from "../Infrastructure/ACL/StoryEngineAclTranslator";
+import { StoryOpenHostService } from "../Presentation/OpenHost/StoryOpenHostService";
+import { StoryMetrics } from "../Infrastructure/Observability/StoryMetrics";
+import { StoryTracing } from "../Infrastructure/Observability/StoryTracing";
+import { StoryRecoveryManager } from "../Infrastructure/Recovery/StoryRecoveryManager";
+import { PluginExtensionBoundary } from "../Infrastructure/Plugins/PluginExtensionBoundary";
+import { EventUpcaster } from "../Domain/Evolution/EventUpcaster";
+import { SchemaMigration } from "../Domain/Evolution/SchemaMigration";
+import { StoryRuntime } from "../Application/Services/StoryRuntime";
+import { CommandValidationPipeline } from "../Application/Pipelines/CommandValidationPipeline";
+import { SceneExecutionPipeline } from "../Application/Pipelines/SceneExecutionPipeline";
+import { StoryWorker } from "../Infrastructure/Workers/StoryWorker";
+import { SnapshotWorker } from "../Infrastructure/Workers/SnapshotWorker";
+import { ReplayWorker } from "../Infrastructure/Workers/ReplayWorker";
+import { CleanupWorker } from "../Infrastructure/Workers/CleanupWorker";
+import { SynchronizationWorker } from "../Infrastructure/Workers/SynchronizationWorker";
+import { AnalyticsWorker } from "../Infrastructure/Workers/AnalyticsWorker";
+import { ProjectionWorker } from "../Infrastructure/Workers/ProjectionWorker";
+import { WorkerLifecycleManager } from "../Infrastructure/Workers/WorkerLifecycleManager";
+import { StoryProgressionSaga } from "../Domain/Sagas/StoryProgressionSaga";
+import { CrossEngineEventPublisher } from "../Infrastructure/Integration/CrossEngineEventPublisher";
+import { StoryConfiguration, DEFAULT_STORY_CONFIGURATION } from "../Infrastructure/Configuration/StoryConfiguration";
+import { StoryHealthChecks } from "../Infrastructure/Health/StoryHealthChecks";
 import { IStoryEngine } from "../Contracts/IStoryEngine";
+import { IStoryEngineOpenApi } from "../Contracts/IStoryEngineOpenApi";
+import { IPluginExtensionBoundary } from "../Contracts/IPluginExtensionBoundary";
+import { ICrossEngineEventPublisher } from "../Contracts/ICrossEngineEventPublisher";
 
 const STORY_ENGINE = Symbol("StoryEngine");
 
@@ -39,6 +66,67 @@ export class StoryEngineModule implements ICoreModule {
         const projectionReadRepository = new StoryProjectionReadRepository(storageEngine.getProjectionStore());
         const snapshotManager = new SnapshotManager(
             new SnapshotRepository(storageEngine.getSnapshotStore())
+        );
+
+        const securityBoundary = new StorySecurityBoundary(eventBus);
+        const acl = new StoryEngineAclTranslator();
+        const metrics = new StoryMetrics(eventBus);
+        const tracing = new StoryTracing();
+        const recoveryManager = new StoryRecoveryManager(
+            engine.eventStoreRepository,
+            engine.storyRepository,
+            snapshotManager
+        );
+        const pluginBoundary = new PluginExtensionBoundary(acl);
+        const eventUpcaster = new EventUpcaster();
+        const schemaMigration = new SchemaMigration();
+        const openHost = new StoryOpenHostService(engine, securityBoundary, acl, eventBus);
+
+        const runtime = new StoryRuntime(eventBus, engine.storyRepository);
+        await runtime.initialize();
+
+        const commandValidationPipeline = new CommandValidationPipeline(securityBoundary, eventBus);
+        const sceneExecutionPipeline = new SceneExecutionPipeline(
+            engine.storyRepository,
+            engine.eventStoreRepository,
+            engine.branchingService,
+            engine.storyDomainService,
+            eventBus
+        );
+
+        const storyWorker = new StoryWorker(eventBus, engine.storyDomainService);
+        const snapshotWorker = new SnapshotWorker(eventBus, snapshotManager);
+        const replayWorker = new ReplayWorker(eventBus, engine.eventStoreRepository, engine.storyRepository);
+        const cleanupWorker = new CleanupWorker(eventBus);
+        const synchronizationWorker = new SynchronizationWorker(eventBus);
+        const analyticsWorker = new AnalyticsWorker(eventBus);
+        const projectionWorker = new ProjectionWorker(eventBus);
+
+        const workerLifecycleManager = new WorkerLifecycleManager();
+        workerLifecycleManager.registerWorker(storyWorker);
+        workerLifecycleManager.registerWorker(snapshotWorker);
+        workerLifecycleManager.registerWorker(replayWorker);
+        workerLifecycleManager.registerWorker(cleanupWorker);
+        workerLifecycleManager.registerWorker(synchronizationWorker);
+        workerLifecycleManager.registerWorker(analyticsWorker);
+        workerLifecycleManager.registerWorker(projectionWorker);
+
+        await workerLifecycleManager.startAll();
+
+        const saga = new StoryProgressionSaga(eventBus, engine.storyRepository);
+        await saga.initialize("default");
+
+        const crossEnginePublisher = new CrossEngineEventPublisher(eventBus);
+
+        const configuration: StoryConfiguration = { ...DEFAULT_STORY_CONFIGURATION };
+
+        const healthChecks = new StoryHealthChecks(
+            eventBus,
+            engine.storyRepository,
+            engine.eventStoreRepository,
+            projectionEngine,
+            runtime,
+            workerLifecycleManager
         );
 
         this.initialized = true;

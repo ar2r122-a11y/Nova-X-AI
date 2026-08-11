@@ -7,3 +7,5 @@ export * from "./Policies";
 export * from "./Specifications";
 export * from "./Services";
 export * from "./Repositories";
+export * from "./Evolution";
+export * from "./Sagas";
