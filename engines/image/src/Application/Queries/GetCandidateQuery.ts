@@ -1,0 +1,1 @@
+export { GetCandidateQuery } from "./ImageQueries";
