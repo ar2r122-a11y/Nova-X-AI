@@ -1,0 +1,30 @@
+{
+  "name": "@nova-x-ai/conversation",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Nova X AI Conversation Engine — dialogue lifecycle, streaming, context compression, and multi-participant orchestration",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "@nova-x-ai/core": "workspace:*",
+    "@nova-x-ai/ai-router": "workspace:*",
+    "@nova-x-ai/character": "workspace:*",
+    "@nova-x-ai/memory": "workspace:*",
+    "@nova-x-ai/emotion": "workspace:*",
+    "@nova-x-ai/relationship": "workspace:*",
+    "@nova-x-ai/story": "workspace:*",
+    "@nova-x-ai/world": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^24.3.0",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  }
+}
