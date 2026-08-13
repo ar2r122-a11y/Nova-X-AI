@@ -16,7 +16,18 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "baseUrl": ".",
+    "paths": {
+      "@nova-x-ai/core": ["engines/core/src/index.ts"],
+      "@nova-x-ai/storage": ["engines/storage/src/index.ts"],
+      "@nova-x-ai/security": ["engines/security/src/index.ts"],
+      "@nova-x-ai/ai-router": ["engines/ai-router/src/index.ts"],
+      "@nova-x-ai/image": ["engines/image/src/index.ts"],
+      "@nova-x-ai/image/*": ["engines/image/src/*"],
+      "@nova-x-ai/conversation": ["engines/conversation/src/index.ts"],
+      "@nova-x-ai/character": ["engines/character/src/index.ts"]
+    }
   },
   "include": ["src"],
   "references": []
