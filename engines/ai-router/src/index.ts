@@ -45,3 +45,5 @@ export type {
 // Infrastructure
 export { InMemoryProviderRepository } from "./Infrastructure/Repositories/InMemoryProviderRepository";
 export { FakeAiProvider } from "./Infrastructure/Providers/FakeAiProvider";
+export { OpenRouterAiProvider } from "./Infrastructure/Providers/OpenRouterAiProvider";
+export type { OpenRouterProviderConfig } from "./Infrastructure/Providers/OpenRouterAiProvider";

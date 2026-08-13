@@ -129,7 +129,7 @@ export class CharacterRepositoryImpl implements ICharacterRepository {
             currentEmotion: snapshot.emotionalSnapshot.currentEmotion.value ?? snapshot.emotionalSnapshot.currentEmotion,
             arousalLevel: snapshot.emotionalSnapshot.arousalLevel,
             interactionCount: snapshot.statistics.interactionCount,
-            evolutionStage: snapshot.statistics.evolutionStage.value ?? snapshot.statistics.evolutionStage,
+            evolutionStage: snapshot.statistics.evolutionStage?.value ?? snapshot.statistics.evolutionStage,
             allowedActions: snapshot.capabilities.allowedActions.map((a: any) => a.value ?? a),
             toolAccess: snapshot.capabilities.toolAccess.value ?? snapshot.capabilities.toolAccess,
             privateBoundaries: snapshot.permissions.privateBoundaries.map((b: any) => b.value ?? b),

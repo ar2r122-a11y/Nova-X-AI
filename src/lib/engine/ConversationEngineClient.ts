@@ -1,6 +1,6 @@
 import type { IEventBus } from "@nova-x-ai/core";
 import { ConversationEngine } from "@nova-x-ai/conversation";
-import { AIRouter, FakeAiProvider } from "@nova-x-ai/ai-router";
+import { AIRouter, FakeAiProvider, OpenRouterAiProvider } from "@nova-x-ai/ai-router";
 
 class SimpleEventBus implements IEventBus {
     private handlers: Map<string, Set<any>> = new Map();
@@ -46,6 +46,8 @@ export class ConversationEngineClient {
         const aiRouter = new AIRouter();
         const fakeProvider = new FakeAiProvider();
         aiRouter.registerProvider(fakeProvider, 1, true);
+        const openRouterProvider = new OpenRouterAiProvider();
+        aiRouter.registerProvider(openRouterProvider, 0, true);
         return new ConversationEngine(eventBus, aiRouter);
     }
 
