@@ -82,6 +82,13 @@ export default function Chat() {
                 claims: { roles: ["user"], permissions: ["chat"] }
             });
 
+            await engine.executeTurn({
+                conversationId,
+                sessionId,
+                requesterId: characterId,
+                claims: { roles: ["user"], permissions: ["chat"] }
+            });
+
             const history = await engine.getMessageHistory({
                 conversationId,
                 requesterId: characterId,

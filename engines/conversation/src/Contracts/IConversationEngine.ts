@@ -12,6 +12,7 @@ import type { ConversationSessionDto } from "../Application/DTO/ConversationSess
 import type { MessageAcknowledgementDto } from "../Application/DTO/MessageAcknowledgementDto";
 import type { MessageDto } from "../Application/DTO/MessageDto";
 import type { ConversationSummaryDto } from "../Application/DTO/ConversationSummaryDto";
+import type { AIRouter } from "@nova-x-ai/ai-router";
 
 export interface IConversationEngine {
     readonly eventBus: IEventBus;
@@ -24,6 +25,7 @@ export interface IConversationEngine {
     readonly contextWindowPolicy: ContextWindowPolicy;
     readonly streamingPolicy: StreamingPolicy;
     readonly toolExecutionPolicy: ToolExecutionPolicy;
+    readonly aiRouter: AIRouter;
 
     startSession(command: {
         conversationId: string;
@@ -43,6 +45,12 @@ export interface IConversationEngine {
         claims: { roles: string[]; permissions: string[] };
         metadata?: Record<string, unknown>;
     }): Promise<MessageAcknowledgementDto>;
+    executeTurn(command: {
+        conversationId: string;
+        sessionId: string;
+        requesterId: string;
+        claims: { roles: string[]; permissions: string[] };
+    }): Promise<void>;
     interrupt(command: {
         conversationId: string;
         sessionId: string;

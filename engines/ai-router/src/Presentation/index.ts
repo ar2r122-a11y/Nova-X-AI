@@ -8,3 +8,4 @@
 export { AIRouter } from "../Application/AIRouter";
 export type { AIRouterOptions } from "../Application/AIRouter";
 export { InMemoryProviderRepository } from "../Infrastructure/Repositories/InMemoryProviderRepository";
+export { FakeAiProvider } from "../Infrastructure/Providers/FakeAiProvider";

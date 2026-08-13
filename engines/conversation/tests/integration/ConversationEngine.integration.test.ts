@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { ConversationEngine } from "../../src/Presentation/ConversationEngine";
 import type { IEventBus } from "@nova-x-ai/core";
+import { AIRouter, FakeAiProvider } from "@nova-x-ai/ai-router";
 
 describe("ConversationEngine", () => {
     const eventBus = {
@@ -8,14 +9,20 @@ describe("ConversationEngine", () => {
         subscribe: () => {}
     } as unknown as IEventBus;
 
+    const createEngine = () => {
+        const router = new AIRouter();
+        router.registerProvider(new FakeAiProvider(), 1, true);
+        return new ConversationEngine(eventBus, router);
+    };
+
     it("should create engine", () => {
-        const engine = new ConversationEngine(eventBus);
+        const engine = createEngine();
         expect(engine).toBeDefined();
         expect(engine.eventBus).toBe(eventBus);
     });
 
     it("should start session", async () => {
-        const engine = new ConversationEngine(eventBus);
+        const engine = createEngine();
         const result = await engine.startSession({
             conversationId: "conv-1",
             ownerId: "user-1",
@@ -27,7 +34,7 @@ describe("ConversationEngine", () => {
     });
 
     it("should post message", async () => {
-        const engine = new ConversationEngine(eventBus);
+        const engine = createEngine();
         await engine.startSession({
             conversationId: "conv-1",
             ownerId: "user-1",
@@ -47,7 +54,7 @@ describe("ConversationEngine", () => {
     });
 
     it("should get conversation", async () => {
-        const engine = new ConversationEngine(eventBus);
+        const engine = createEngine();
         await engine.startSession({
             conversationId: "conv-1",
             ownerId: "user-1",
@@ -60,7 +67,7 @@ describe("ConversationEngine", () => {
     });
 
     it("should return null for non-existent conversation", async () => {
-        const engine = new ConversationEngine(eventBus);
+        const engine = createEngine();
         const result = await engine.getConversation({ conversationId: "conv-none", requesterId: "user-1" });
         expect(result).toBeNull();
     });
