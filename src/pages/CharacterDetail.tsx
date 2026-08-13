@@ -10,9 +10,11 @@ export default function CharacterDetail() {
     const images = useAppStore((s) => s.images);
     const addImage = useAppStore((s) => s.addImage);
     const updateImage = useAppStore((s) => s.updateImage);
+    const updateCharacter = useAppStore((s) => s.updateCharacter);
     const setCurrentCharacterId = useAppStore((s) => s.setCurrentCharacterId);
     const [generating, setGenerating] = useState(false);
     const [prompt, setPrompt] = useState("");
+    const [editing, setEditing] = useState(false);
 
     const character = characters.find((c) => c.id === id);
     const characterImages = images.filter((img) => img.characterId === id);
@@ -83,10 +85,7 @@ export default function CharacterDetail() {
         const imageRecord = characterImages.find((img) => img.id === imageId);
         const selectedCandidate = imageRecord?.candidates.find((c) => c.id === imageRecord.selectedCandidateId);
         const avatarUri = selectedCandidate?.uri || imageRecord?.candidates[0]?.uri || "";
-        const updated = { ...character, avatarImageId: avatarUri };
-        useAppStore.setState((state) => ({
-            characters: state.characters.map((c) => (c.id === character.id ? updated : c))
-        }));
+        updateCharacter(character.id, { avatarImageId: avatarUri });
     };
 
     if (!character) {
@@ -110,6 +109,9 @@ export default function CharacterDetail() {
                 </button>
                 <h1>{character.name}</h1>
                 <div className="nav-buttons">
+                    <button className="secondary" onClick={() => setEditing(!editing)}>
+                        {editing ? "Done Editing" : "Edit"}
+                    </button>
                     <button className="secondary" onClick={() => navigate("/gallery")}>
                         Gallery
                     </button>
@@ -123,15 +125,50 @@ export default function CharacterDetail() {
             </nav>
 
             <div className="content">
-                <div className="character-info">
-                    <h2>{character.name}</h2>
-                    <p>{character.description}</p>
-                    {character.avatarImageId && (
-                        <div className="current-avatar">
-                            <h4>Primary Avatar</h4>
-                            <img src={character.avatarImageId} alt="Avatar" />
+                <div className="character-profile">
+                    <div className="profile-avatar">
+                        {character.avatarImageId ? (
+                            <img src={character.avatarImageId} alt={character.name} />
+                        ) : (
+                            <div className="avatar-placeholder-large">?</div>
+                        )}
+                    </div>
+                    <div className="profile-info">
+                        <h2>{character.name}</h2>
+                        {character.title && <p className="profile-title">{character.title}</p>}
+                        {character.description && <p className="profile-bio">{character.description}</p>}
+                        <div className="profile-meta">
+                            {character.age && <span>Age: {character.age}</span>}
+                            {character.gender && <span>Gender: {character.gender}</span>}
+                            {character.role && <span>Role: {character.role}</span>}
+                            {character.language && <span>Language: {character.language}</span>}
                         </div>
-                    )}
+                        {character.tags.length > 0 && (
+                            <div className="profile-tags">
+                                {character.tags.map((tag) => (
+                                    <span key={tag} className="tag">{tag}</span>
+                                ))}
+                            </div>
+                        )}
+                        {character.personality.traits.length > 0 && (
+                            <div className="profile-traits">
+                                <h4>Personality</h4>
+                                <div className="trait-list">
+                                    {character.personality.traits.map((t) => (
+                                        <span key={t.name} className="trait-chip">{t.name}</span>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                        {character.appearance.clothing && (
+                            <div className="profile-appearance">
+                                <h4>Appearance</h4>
+                                <p>{character.appearance.bodyType} {character.appearance.bodySize} build, {character.appearance.height} tall</p>
+                                <p>{character.appearance.hairLength} {character.appearance.hairStyle} {character.appearance.hairColor} hair, {character.appearance.eyeColor} eyes</p>
+                                <p>Wearing {character.appearance.clothing.toLowerCase()}</p>
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 <div className="image-generation">

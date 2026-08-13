@@ -7,6 +7,29 @@ import { UpdateCharacterTraitsCommand } from "../../src/Application/Commands/Upd
 import { GetCharacterQuery } from "../../src/Application/Queries/GetCharacterQuery";
 import { CharacterAggregateFactory } from "../../src/Domain/Services/CharacterAggregateFactory";
 
+function makeCreateCommand() {
+    return new CreateCharacterCommand(
+        "Test Hero",
+        "Hero",
+        "A brave test character.",
+        "Testing the engine",
+        "Tester",
+        "", "", "", "", "",
+        [], [],
+        "", "", "", "", "", "", "", "", "", "", "", "",
+        [],
+        "", "", "",
+        [], [], [],
+        "",
+        [],
+        "", "",
+        [], [], [], [],
+        [{ name: "openness", score: 0.8 }],
+        "owner-123",
+        { roles: ["user"], permissions: ["read"] }
+    );
+}
+
 describe("Handlers", () => {
     it("CreateCharacterCommandHandler should create character", async () => {
         const saveFn = vi.fn(async () => {});
@@ -22,16 +45,7 @@ describe("Handlers", () => {
             getRepository: () => mockRepo
         } as any, mockEventBus as any);
 
-        const command = new CreateCharacterCommand(
-            "Test Hero",
-            "Hero",
-            "A brave test character.",
-            "Testing the engine",
-            "Tester",
-            [{ name: "openness", score: 0.8 }],
-            "owner-123",
-            { roles: ["user"], permissions: ["read"] }
-        );
+        const command = makeCreateCommand();
 
         await handler.handle(command);
         expect(saveFn).toHaveBeenCalledTimes(1);

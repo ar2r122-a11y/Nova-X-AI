@@ -3,9 +3,54 @@ import { create } from "zustand";
 export interface Character {
     id: string;
     name: string;
+    title: string;
     description: string;
-    avatarImageId: string | null;
+    age: string;
+    gender: string;
+    role: string;
+    origin: string;
+    language: string;
+    tags: string[];
     createdAt: number;
+    avatarImageId: string | null;
+    appearance: {
+        visualDescription: string;
+        skinTone: string;
+        faceCharacteristics: string;
+        bodyType: string;
+        bodySize: string;
+        height: string;
+        hairStyle: string;
+        hairLength: string;
+        hairColor: string;
+        eyeCharacteristics: string;
+        eyeColor: string;
+        clothing: string;
+        accessories: string[];
+    };
+    personality: {
+        description: string;
+        speakingStyle: string;
+        tone: string;
+        traits: Array<{ name: string; score: number }>;
+        interests: string[];
+        likes: string[];
+        dislikes: string[];
+        background: string;
+        relationshipStyle: string;
+        goals: string[];
+        moralAlignment: string;
+        quirks: string[];
+        fears: string[];
+        desires: string[];
+        customInstructions: string;
+    };
+    voice: {
+        tone: string;
+        speechTempo: string;
+        vocabularyLevel: string;
+        dialectNotes: string[];
+    };
 }
 
 export interface GeneratedImage {
@@ -33,6 +78,7 @@ export interface AppState {
 
     setCharacters: (characters: Character[]) => void;
     addCharacter: (character: Character) => void;
+    updateCharacter: (id: string, updates: Partial<Character>) => void;
     setCurrentCharacterId: (id: string | null) => void;
     setImages: (images: GeneratedImage[]) => void;
     addImage: (image: GeneratedImage) => void;
@@ -52,6 +98,9 @@ export const useAppStore = create<AppState>((set) => ({
     setCharacters: (characters) => set({ characters }),
     addCharacter: (character) => set((state) => ({
         characters: [...state.characters, character]
+    })),
+    updateCharacter: (id, updates) => set((state) => ({
+        characters: state.characters.map((c) => (c.id === id ? { ...c, ...updates } : c))
     })),
     setCurrentCharacterId: (currentCharacterId) => set({ currentCharacterId }),
     setImages: (images) => set({ images }),

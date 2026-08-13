@@ -23,6 +23,28 @@ const createFakeRepository = () => {
     };
 };
 
+function makeCreateCommand(name: string, ownerId: string) {
+    return new CreateCharacterCommand(
+        name,
+        "Hero",
+        "A brave test character.",
+        "Testing the engine",
+        "Tester",
+        "", "", "", "", "",
+        [], [],
+        "", "", "", "", "", "", "", "", "", "", "", "",
+        [],
+        "", "", "",
+        [], [], [],
+        "", "",
+        [], "", "",
+        [], [], [], [],
+        [{ name: "openness", score: 0.8 }],
+        ownerId,
+        { roles: ["user"], permissions: ["read"] }
+    );
+}
+
 describe("CharacterEngine Integration", () => {
     let eventBus: EventBus;
     let engine: CharacterEngine;
@@ -44,17 +66,7 @@ describe("CharacterEngine Integration", () => {
             }
         });
 
-        const command = new CreateCharacterCommand(
-            "Integration Hero",
-            "Hero",
-            "A brave test character for integration.",
-            "Testing the engine",
-            "Tester",
-            [{ name: "openness", score: 0.8 }],
-            "owner-123",
-            { roles: ["user"], permissions: ["read"] }
-        );
-
+        const command = makeCreateCommand("Integration Hero", "owner-123");
         await engine.createCharacter(command);
         expect(publishedEvent).not.toBeNull();
         expect(publishedEvent.eventType).toBe("EVT_CHAR_CharacterCreated");
@@ -62,16 +74,7 @@ describe("CharacterEngine Integration", () => {
     });
 
     it("should publish CharacterTraitsUpdatedEvent on trait update", async () => {
-        const createCommand = new CreateCharacterCommand(
-            "Update Hero",
-            "Hero",
-            "A character for update testing.",
-            "Testing updates",
-            "Tester",
-            [{ name: "openness", score: 0.5 }],
-            "owner-123",
-            { roles: ["user"], permissions: ["read"] }
-        );
+        const createCommand = makeCreateCommand("Update Hero", "owner-123");
         await engine.createCharacter(createCommand);
 
         let publishedEvent: any = null;
@@ -97,16 +100,7 @@ describe("CharacterEngine Integration", () => {
     });
 
     it("should get character by query", async () => {
-        const command = new CreateCharacterCommand(
-            "Query Hero",
-            "Hero",
-            "A character for query testing.",
-            "Testing queries",
-            "Tester",
-            [{ name: "openness", score: 0.7 }],
-            "owner-123",
-            { roles: ["user"], permissions: ["read"] }
-        );
+        const command = makeCreateCommand("Query Hero", "owner-123");
         await engine.createCharacter(command);
 
         const characters = await engine.listCharacters(new ListCharactersQuery());
