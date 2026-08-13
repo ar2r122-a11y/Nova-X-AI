@@ -62,7 +62,8 @@ export default defineConfig({
             "@nova-x-ai/ai-router": path.resolve(__dirname, "engines/ai-router/src"),
             "@nova-x-ai/image": path.resolve(__dirname, "engines/image/src"),
             "@nova-x-ai/conversation": path.resolve(__dirname, "engines/conversation/src"),
-            "@nova-x-ai/character": path.resolve(__dirname, "engines/character/src")
+            "@nova-x-ai/character": path.resolve(__dirname, "engines/character/src"),
+            "@nova-x-ai/analytics": path.resolve(__dirname, "engines/analytics/src")
         }
     }
 });

@@ -26,7 +26,8 @@
       "@nova-x-ai/image": ["engines/image/src/index.ts"],
       "@nova-x-ai/image/*": ["engines/image/src/*"],
       "@nova-x-ai/conversation": ["engines/conversation/src/index.ts"],
-      "@nova-x-ai/character": ["engines/character/src/index.ts"]
+      "@nova-x-ai/character": ["engines/character/src/index.ts"],
+      "@nova-x-ai/analytics": ["engines/analytics/src/index.ts"]
     }
   },
   "include": ["src"],
