@@ -44,10 +44,12 @@ export class ConversationEngineClient {
     private static async createEngine(): Promise<ConversationEngine> {
         const eventBus = new SimpleEventBus();
         const aiRouter = new AIRouter();
+        const openRouterProvider = new OpenRouterAiProvider({
+            serverEndpoint: "/api/ai/chat"
+        });
+        aiRouter.registerProvider(openRouterProvider, 0, true);
         const fakeProvider = new FakeAiProvider();
         aiRouter.registerProvider(fakeProvider, 1, true);
-        const openRouterProvider = new OpenRouterAiProvider();
-        aiRouter.registerProvider(openRouterProvider, 0, true);
         return new ConversationEngine(eventBus, aiRouter);
     }
 

@@ -36,6 +36,8 @@ export interface OpenRouterProviderConfig {
 
     readonly appTitle?: string;
 
+    readonly serverEndpoint?: string;
+
 }
 
 interface OpenRouterMessage {
@@ -90,6 +92,7 @@ export class OpenRouterAiProvider implements IAiProvider {
         readonly baseUrl: string;
         readonly httpReferer: string;
         readonly appTitle: string;
+        readonly serverEndpoint?: string;
     };
 
     private health: ProviderHealth;
@@ -102,12 +105,15 @@ export class OpenRouterAiProvider implements IAiProvider {
 
         const model = config.model ?? "openrouter/free";
 
+        const serverEndpoint = config.serverEndpoint;
+
         this.config = {
             apiKey: config.apiKey ?? OpenRouterAiProvider.readEnvKey(),
             model,
-            baseUrl: config.baseUrl ?? "https://openrouter.ai/api/v1/chat/completions",
+            baseUrl: config.baseUrl ?? (serverEndpoint ? serverEndpoint : "https://openrouter.ai/api/v1/chat/completions"),
             httpReferer: config.httpReferer ?? "http://localhost:5173",
-            appTitle: config.appTitle ?? "Nova X AI"
+            appTitle: config.appTitle ?? "Nova X AI",
+            serverEndpoint
         };
 
         this.capabilities = {
@@ -122,6 +128,12 @@ export class OpenRouterAiProvider implements IAiProvider {
     }
 
     isAvailable(): boolean {
+
+        if (this.config.serverEndpoint) {
+
+            return true;
+
+        }
 
         return !!this.config.apiKey && this.config.apiKey.length > 0;
 
@@ -152,6 +164,12 @@ export class OpenRouterAiProvider implements IAiProvider {
     }
 
     async executePrompt(request: PromptRequest): Promise<PromptResult> {
+
+        if (this.config.serverEndpoint) {
+
+            return this.executeViaServer(request);
+
+        }
 
         const apiKey = this.config.apiKey;
 
@@ -207,6 +225,28 @@ export class OpenRouterAiProvider implements IAiProvider {
     }
 
     async *executePromptStream(request: PromptRequest): AsyncIterable<StreamChunk> {
+
+        if (this.config.serverEndpoint) {
+
+            const result = await this.executeViaServer(request);
+
+            yield {
+
+                content: result.content,
+
+                delta: result.content,
+
+                isLast: true,
+
+                model: result.model,
+
+                usage: result.usage
+
+            };
+
+            return;
+
+        }
 
         const apiKey = this.config.apiKey;
 
@@ -385,6 +425,50 @@ export class OpenRouterAiProvider implements IAiProvider {
         }
 
         return process.env.OPENROUTER_API_KEY ?? "";
+
+    }
+
+    private async executeViaServer(request: PromptRequest): Promise<PromptResult> {
+
+        const startedAt = Date.now();
+
+        const response = await fetch(this.config.serverEndpoint!, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                messages: this.buildMessages(request),
+                model: this.modelFor(request),
+                max_tokens: request.maxTokens,
+                temperature: request.temperature
+            })
+        });
+
+        if (!response.ok) {
+
+            const detail = await OpenRouterAiProvider.safeText(response);
+
+            throw new Error(
+                `Server endpoint failed: ${response.status} ${response.statusText}${detail ? ` — ${detail}` : ""}`
+            );
+
+        }
+
+        const json = (await response.json()) as OpenRouterResponseShape;
+
+        const choice = json.choices?.[0];
+
+        const content = choice?.message?.content ?? "";
+
+        return {
+            content,
+            model: json.model ?? this.modelFor(request),
+            providerId: this.id.value,
+            usage: json.usage ? this.toUsage(json.usage) : this.estimateUsage(request, content),
+            finishReason: choice?.finish_reason ?? "stop",
+            latencyMs: Date.now() - startedAt
+        };
 
     }
 
