@@ -153,14 +153,11 @@ export class Checksum {
         this.value = value;
     }
 
-    public static create(data: string): Checksum {
-        let hash = 0;
-        for (let i = 0; i < data.length; i++) {
-            const char = data.charCodeAt(i);
-            hash = ((hash << 5) - hash) + char;
-            hash = hash & hash;
-        }
-        const hex = Math.abs(hash).toString(16).padStart(8, "0");
+    public static async create(data: string): Promise<Checksum> {
+        const encoded = new TextEncoder().encode(data);
+        const hash = await crypto.subtle.digest("SHA-256", encoded);
+        const hashArray = Array.from(new Uint8Array(hash));
+        const hex = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
         return new Checksum(`sha256-${hex}`);
     }
 

@@ -123,7 +123,8 @@ export class BrowserStorageEngine implements IStorageEngine {
             recordDelta: async () => {},
             getDeltas: async () => [],
             resolveConflicts: async () => null,
-            clear: async () => {}
+            clear: async () => {},
+            getAllStreams: async () => []
         };
     }
 

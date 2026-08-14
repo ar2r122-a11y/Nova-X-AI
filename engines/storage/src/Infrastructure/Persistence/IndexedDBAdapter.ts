@@ -44,6 +44,9 @@ export class IndexedDBAdapter {
         if (!db.objectStoreNames.contains("backups")) {
             db.createObjectStore("backups", { keyPath: "backupId" });
         }
+        if (!db.objectStoreNames.contains("backupData")) {
+            db.createObjectStore("backupData", { keyPath: "backupId" });
+        }
         if (!db.objectStoreNames.contains("vectorClocks")) {
             db.createObjectStore("vectorClocks", { keyPath: "streamId" });
         }

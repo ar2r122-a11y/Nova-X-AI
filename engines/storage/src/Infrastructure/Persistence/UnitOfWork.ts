@@ -1,8 +1,13 @@
 import type { IRepository, IUnitOfWork, IRepositoryFactory } from "../../Contracts";
+import { StorageKey } from "../../Domain/ValueObjects";
+
+
+
+
 
 export class UnitOfWork implements IUnitOfWork {
     private readonly repositories = new Map<string, IRepository<any>>();
-    private readonly changes = new Map<string, { before: unknown; after: unknown }>();
+    private readonly changes = new Map<string, { collection: string; before: unknown; after: unknown }>();
     private committed = false;
     private rolledback = false;
 
@@ -24,8 +29,17 @@ export class UnitOfWork implements IUnitOfWork {
             throw new Error("Transaction already completed.");
         }
 
-        for (const [, repo] of this.repositories) {
-            for (const [, change] of this.changes) {
+        const changesByCollection = new Map<string, { before: unknown; after: unknown }[]>();
+        for (const [, change] of this.changes) {
+            const list = changesByCollection.get(change.collection) ?? [];
+            list.push({ before: change.before, after: change.after });
+            changesByCollection.set(change.collection, list);
+        }
+
+        for (const [collection, changes] of changesByCollection) {
+            const repo = this.repositories.get(collection);
+            if (!repo) continue;
+            for (const change of changes) {
                 await repo.save(change.after);
             }
         }
@@ -46,10 +60,11 @@ export class UnitOfWork implements IUnitOfWork {
         return !this.committed && !this.rolledback;
     }
 
-    registerChange(_key: string, before: unknown, after: unknown): void {
+    registerChange(key: string, before: unknown, after: unknown): void {
         if (this.committed || this.rolledback) {
             throw new Error("Transaction already completed.");
         }
-        this.changes.set(_key, { before, after });
+        const storageKey = StorageKey.fromString(key);
+        this.changes.set(key, { collection: storageKey.getCollection(), before, after });
     }
 }

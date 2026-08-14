@@ -77,7 +77,20 @@ export class StorageEngineModule implements ICoreModule {
             getEncryptionBoundary: () => encryptionBoundary,
             getCacheProvider: () => cacheProvider,
             getMigrationRunner: () => migrationRunner,
-            getQuotaUsage: async () => ({ totalBytes: 0, eventStoreBytes: 0, snapshotBytes: 0, backupBytes: 0, limitBytes: 1073741824, lastUpdated: Date.now() }),
+            getQuotaUsage: async () => {
+                const adapter = this.adapter;
+                if (!adapter) {
+                    return { totalBytes: 0, eventStoreBytes: 0, snapshotBytes: 0, backupBytes: 0, limitBytes: 1073741824, lastUpdated: Date.now() };
+                }
+
+                const eventStoreBytes = await this.countStore(adapter, "events");
+                const snapshotBytes = await this.countStore(adapter, "snapshots");
+                const backupBytes = await this.countStore(adapter, "backups");
+                const walBytes = await this.countStore(adapter, "wal");
+                const totalBytes = eventStoreBytes + snapshotBytes + backupBytes + walBytes;
+
+                return { totalBytes, eventStoreBytes, snapshotBytes, backupBytes, limitBytes: 1073741824, lastUpdated: Date.now() };
+            },
             interrupt: async () => {
                 for (const worker of this.workers) {
                     await worker.stop();
@@ -92,6 +105,7 @@ export class StorageEngineModule implements ICoreModule {
 
         compactionWorker.setStorage(this.storage);
         cleanupWorker.setStorage(this.storage);
+        syncWorker.setStorage(this.storage);
 
         for (const worker of this.workers) {
             await worker.start();
@@ -109,5 +123,16 @@ export class StorageEngineModule implements ICoreModule {
 
     getStorage(): IStorageEngine | null {
         return this.storage;
+    }
+
+    private async countStore(adapter: IndexedDBAdapter, storeName: string): Promise<number> {
+        const tx = adapter.transaction([storeName], "readonly");
+        const store = tx.objectStore(storeName);
+
+        return new Promise((resolve, reject) => {
+            const request = store.count();
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
     }
 }

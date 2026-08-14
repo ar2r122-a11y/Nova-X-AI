@@ -1,9 +1,11 @@
 import { IEncryptionBoundary } from "../../Contracts";
 
 export class EncryptionBoundary implements IEncryptionBoundary {
+    private readonly keyStore = new Map<string, CryptoKey>();
+
     async encrypt(data: ArrayBuffer, keyId: string): Promise<{ data: ArrayBuffer; keyId: string }> {
+        const key = await this.getOrCreateKey(keyId);
         const iv = crypto.getRandomValues(new Uint8Array(12));
-        const key = await this.getKey(keyId);
 
         const encrypted = await crypto.subtle.encrypt(
             { name: "AES-GCM", iv },
@@ -19,10 +21,10 @@ export class EncryptionBoundary implements IEncryptionBoundary {
     }
 
     async decrypt(data: ArrayBuffer, keyId: string): Promise<ArrayBuffer> {
+        const key = await this.getOrCreateKey(keyId);
         const combined = new Uint8Array(data);
         const iv = combined.slice(0, 12);
         const ciphertext = combined.slice(12);
-        const key = await this.getKey(keyId);
 
         return crypto.subtle.decrypt(
             { name: "AES-GCM", iv },
@@ -31,11 +33,24 @@ export class EncryptionBoundary implements IEncryptionBoundary {
         );
     }
 
-    async rotateKey(_oldKeyId: string, _newKeyId: string): Promise<void> {
+    async rotateKey(oldKeyId: string, newKeyId: string): Promise<void> {
+        await this.getOrCreateKey(oldKeyId);
+        const newKey = await crypto.subtle.generateKey(
+            { name: "AES-GCM", length: 256 },
+            true,
+            ["encrypt", "decrypt"]
+        );
+        this.keyStore.set(newKeyId, newKey);
+        this.keyStore.delete(oldKeyId);
     }
 
-    private async getKey(keyId: string): Promise<CryptoKey> {
+    private async getOrCreateKey(keyId: string): Promise<CryptoKey> {
+        const existing = this.keyStore.get(keyId);
+        if (existing) return existing;
+
         const keyData = new TextEncoder().encode(keyId.padEnd(32, "0").slice(0, 32));
-        return crypto.subtle.importKey("raw", keyData, "AES-GCM", false, ["encrypt", "decrypt"]);
+        const key = await crypto.subtle.importKey("raw", keyData, "AES-GCM", false, ["encrypt", "decrypt"]);
+        this.keyStore.set(keyId, key);
+        return key;
     }
 }

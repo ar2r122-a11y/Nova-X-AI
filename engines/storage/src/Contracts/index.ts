@@ -77,6 +77,7 @@ export interface IDeltaLog {
     getDeltas(streamId: string): Promise<{ delta: unknown; clock: VectorClock; timestamp: number }[]>;
     resolveConflicts(streamId: string, localClock: VectorClock, remoteClock: VectorClock): Promise<unknown>;
     clear(streamId: string): Promise<void>;
+    getAllStreams(): Promise<string[]>;
 }
 
 export interface IVectorClockStore {

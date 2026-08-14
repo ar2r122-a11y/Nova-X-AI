@@ -79,4 +79,25 @@ export class DeltaLog implements IDeltaLog {
             request.onerror = () => reject(request.error);
         });
     }
+
+    async getAllStreams(): Promise<string[]> {
+        const tx = this.adapter.transaction(["deltaLog"], "readonly");
+        const store = tx.objectStore("deltaLog");
+        const index = store.index("streamId");
+
+        return new Promise((resolve, reject) => {
+            const request = index.openCursor();
+            const streams = new Set<string>();
+            request.onsuccess = () => {
+                const cursor = request.result;
+                if (cursor) {
+                    streams.add(cursor.value.streamId);
+                    cursor.continue();
+                } else {
+                    resolve(Array.from(streams));
+                }
+            };
+            request.onerror = () => reject(request.error);
+        });
+    }
 }

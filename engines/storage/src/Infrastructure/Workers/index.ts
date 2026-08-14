@@ -29,6 +29,11 @@ export class StorageStreamingWorker implements IStorageWorker {
 
 export class SyncWorker implements IStorageWorker {
     private running = false;
+    private storage: IStorageEngine | null = null;
+
+    setStorage(storage: IStorageEngine): void {
+        this.storage = storage;
+    }
 
     async start(): Promise<void> {
         this.running = true;
@@ -49,6 +54,19 @@ export class SyncWorker implements IStorageWorker {
 
     private async sync(): Promise<void> {
         while (this.running) {
+            if (!this.storage) break;
+            try {
+                const deltaLog = this.storage.getDeltaLog();
+                const streams = await deltaLog.getAllStreams();
+                for (const streamId of streams) {
+                    const deltas = await deltaLog.getDeltas(streamId);
+                    if (deltas.length > 0) {
+                        await deltaLog.clear(streamId);
+                    }
+                }
+            } catch {
+                // sync failure; continue on next cycle
+            }
             await new Promise(resolve => setTimeout(resolve, 5000));
         }
     }

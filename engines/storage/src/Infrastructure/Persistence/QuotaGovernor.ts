@@ -24,8 +24,10 @@ export class QuotaGovernor implements IQuotaPolicy {
         };
     }
 
-    async getEvictionCandidates(_usage: QuotaUsage): Promise<string[]> {
-        const snapshots: string[] = [];
-        return snapshots;
+    async getEvictionCandidates(usage: QuotaUsage): Promise<string[]> {
+        if (usage.totalBytes < usage.limitBytes * this.nearLimitThreshold) {
+            return [];
+        }
+        return [];
     }
 }
