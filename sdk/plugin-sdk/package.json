@@ -1,0 +1,22 @@
+{
+  "name": "@nova-x-ai/plugin-sdk",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Nova X AI Plugin SDK — public contracts for plugin developers",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@nova-x-ai/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^24.3.0",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  }
+}
