@@ -13,6 +13,7 @@ import { BranchingService } from "../Domain/Services/BranchingService";
 import { StoryRepositoryFactory } from "./Persistence/StoryRepositoryFactory";
 import { StartStoryCommand } from "../Application/Commands/StartStoryCommand";
 import { AdvanceSceneCommand } from "../Application/Commands/AdvanceSceneCommand";
+import { AdvancePlotCommand } from "../Application/Commands/AdvancePlotCommand";
 import { SelectChoiceCommand } from "../Application/Commands/SelectChoiceCommand";
 import { CompleteStoryCommand } from "../Application/Commands/CompleteStoryCommand";
 import { FailStoryCommand } from "../Application/Commands/FailStoryCommand";
@@ -22,6 +23,7 @@ import { GetStoryQuery } from "../Application/Queries/GetStoryQuery";
 import { GetStoryProgressQuery } from "../Application/Queries/GetStoryProgressQuery";
 import { GetQuestQuery } from "../Application/Queries/GetQuestQuery";
 import { GetAvailableBranchesQuery } from "../Application/Queries/GetAvailableBranchesQuery";
+import { GetPlotStateQuery } from "../Application/Queries/GetPlotStateQuery";
 import { ListStoriesQuery } from "../Application/Queries/ListStoriesQuery";
 import { StoryAggregateDto } from "../Application/DTO/StoryAggregateDto";
 import { QuestDto } from "../Application/DTO/QuestDto";
@@ -29,8 +31,10 @@ import { ObjectiveDto } from "../Application/DTO/ObjectiveDto";
 import { BranchDto } from "../Application/DTO/BranchDto";
 import { StorySummaryDto } from "../Application/DTO/StorySummaryDto";
 import { StoryProgressDto } from "../Application/DTO/StoryProgressDto";
+import { PlotStateDto } from "../Application/DTO/PlotStateDto";
 import { StartStoryCommandHandler } from "../Application/Handlers/StartStoryCommandHandler";
 import { AdvanceSceneCommandHandler } from "../Application/Handlers/AdvanceSceneCommandHandler";
+import { AdvancePlotCommandHandler } from "../Application/Handlers/AdvancePlotCommandHandler";
 import { SelectChoiceCommandHandler } from "../Application/Handlers/SelectChoiceCommandHandler";
 import { CompleteStoryCommandHandler } from "../Application/Handlers/CompleteStoryCommandHandler";
 import { FailStoryCommandHandler } from "../Application/Handlers/FailStoryCommandHandler";
@@ -40,6 +44,7 @@ import { GetStoryQueryHandler } from "../Application/Handlers/GetStoryQueryHandl
 import { GetStoryProgressQueryHandler } from "../Application/Handlers/GetStoryProgressQueryHandler";
 import { GetQuestQueryHandler } from "../Application/Handlers/GetQuestQueryHandler";
 import { GetAvailableBranchesQueryHandler } from "../Application/Handlers/GetAvailableBranchesQueryHandler";
+import { GetPlotStateQueryHandler } from "../Application/Handlers/GetPlotStateQueryHandler";
 import { ListStoriesQueryHandler } from "../Application/Handlers/ListStoriesQueryHandler";
 
 export class StoryEngine implements IStoryEngine {
@@ -54,6 +59,7 @@ export class StoryEngine implements IStoryEngine {
 
     private readonly startStoryHandler: StartStoryCommandHandler;
     private readonly advanceSceneHandler: AdvanceSceneCommandHandler;
+    private readonly advancePlotHandler: AdvancePlotCommandHandler;
     private readonly selectChoiceHandler: SelectChoiceCommandHandler;
     private readonly completeStoryHandler: CompleteStoryCommandHandler;
     private readonly failStoryHandler: FailStoryCommandHandler;
@@ -63,6 +69,7 @@ export class StoryEngine implements IStoryEngine {
     private readonly getStoryProgressHandler: GetStoryProgressQueryHandler;
     private readonly getQuestHandler: GetQuestQueryHandler;
     private readonly getAvailableBranchesHandler: GetAvailableBranchesQueryHandler;
+    private readonly getPlotStateHandler: GetPlotStateQueryHandler;
     private readonly listStoriesHandler: ListStoriesQueryHandler;
 
     constructor(eventBus: IEventBus, storageEngine: { getEventStore(): any }) {
@@ -84,6 +91,7 @@ export class StoryEngine implements IStoryEngine {
 
         this.startStoryHandler = new StartStoryCommandHandler(eventBus, this.storyRepository, this.storyDomainService);
         this.advanceSceneHandler = new AdvanceSceneCommandHandler(eventBus, this.storyRepository, this.storyDomainService);
+        this.advancePlotHandler = new AdvancePlotCommandHandler(eventBus, this.storyRepository, this.storyDomainService);
         this.selectChoiceHandler = new SelectChoiceCommandHandler(eventBus, this.storyRepository, this.storyDomainService);
         this.completeStoryHandler = new CompleteStoryCommandHandler(eventBus, this.storyRepository, this.storyDomainService);
         this.failStoryHandler = new FailStoryCommandHandler(eventBus, this.storyRepository, this.storyDomainService);
@@ -93,6 +101,7 @@ export class StoryEngine implements IStoryEngine {
         this.getStoryProgressHandler = new GetStoryProgressQueryHandler(this.storyRepository, this.progressionCalculator);
         this.getQuestHandler = new GetQuestQueryHandler(this.questRepository);
         this.getAvailableBranchesHandler = new GetAvailableBranchesQueryHandler(this.storyRepository, this.branchingService);
+        this.getPlotStateHandler = new GetPlotStateQueryHandler(this.storyRepository);
         this.listStoriesHandler = new ListStoriesQueryHandler(this.storyRepository);
     }
 
@@ -102,6 +111,10 @@ export class StoryEngine implements IStoryEngine {
 
     async advanceScene(command: AdvanceSceneCommand): Promise<StoryAggregateDto> {
         return this.advanceSceneHandler.handle(command);
+    }
+
+    async advancePlot(command: AdvancePlotCommand): Promise<StoryAggregateDto> {
+        return this.advancePlotHandler.handle(command);
     }
 
     async selectChoice(command: SelectChoiceCommand): Promise<StoryAggregateDto> {
@@ -138,6 +151,10 @@ export class StoryEngine implements IStoryEngine {
 
     async getAvailableBranches(query: GetAvailableBranchesQuery): Promise<BranchDto[]> {
         return this.getAvailableBranchesHandler.handle(query);
+    }
+
+    async getPlotState(query: GetPlotStateQuery): Promise<PlotStateDto | null> {
+        return this.getPlotStateHandler.handle(query);
     }
 
     async listStories(query: ListStoriesQuery): Promise<StorySummaryDto[]> {

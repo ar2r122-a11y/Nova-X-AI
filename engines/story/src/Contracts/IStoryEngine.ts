@@ -8,6 +8,7 @@ import type { IProgressionCalculator } from "../Domain/Services/IProgressionCalc
 import type { IBranchingService } from "../Domain/Services/IBranchingService";
 import { StartStoryCommand } from "../Application/Commands/StartStoryCommand";
 import { AdvanceSceneCommand } from "../Application/Commands/AdvanceSceneCommand";
+import { AdvancePlotCommand } from "../Application/Commands/AdvancePlotCommand";
 import { SelectChoiceCommand } from "../Application/Commands/SelectChoiceCommand";
 import { CompleteStoryCommand } from "../Application/Commands/CompleteStoryCommand";
 import { FailStoryCommand } from "../Application/Commands/FailStoryCommand";
@@ -17,6 +18,7 @@ import { GetStoryQuery } from "../Application/Queries/GetStoryQuery";
 import { GetStoryProgressQuery } from "../Application/Queries/GetStoryProgressQuery";
 import { GetQuestQuery } from "../Application/Queries/GetQuestQuery";
 import { GetAvailableBranchesQuery } from "../Application/Queries/GetAvailableBranchesQuery";
+import { GetPlotStateQuery } from "../Application/Queries/GetPlotStateQuery";
 import { ListStoriesQuery } from "../Application/Queries/ListStoriesQuery";
 import { StoryAggregateDto } from "../Application/DTO/StoryAggregateDto";
 import { QuestDto } from "../Application/DTO/QuestDto";
@@ -24,6 +26,7 @@ import { ObjectiveDto } from "../Application/DTO/ObjectiveDto";
 import { BranchDto } from "../Application/DTO/BranchDto";
 import { StorySummaryDto } from "../Application/DTO/StorySummaryDto";
 import { StoryProgressDto } from "../Application/DTO/StoryProgressDto";
+import { PlotStateDto } from "../Application/DTO/PlotStateDto";
 
 export interface IStoryEngine {
     readonly eventBus: IEventBus;
@@ -37,6 +40,7 @@ export interface IStoryEngine {
 
     startStory(command: StartStoryCommand): Promise<StoryAggregateDto>;
     advanceScene(command: AdvanceSceneCommand): Promise<StoryAggregateDto>;
+    advancePlot(command: AdvancePlotCommand): Promise<StoryAggregateDto>;
     selectChoice(command: SelectChoiceCommand): Promise<StoryAggregateDto>;
     completeStory(command: CompleteStoryCommand): Promise<StoryAggregateDto>;
     failStory(command: FailStoryCommand): Promise<StoryAggregateDto>;
@@ -46,6 +50,7 @@ export interface IStoryEngine {
     getStoryProgress(query: GetStoryProgressQuery): Promise<StoryProgressDto | null>;
     getQuest(query: GetQuestQuery): Promise<QuestDto | null>;
     getAvailableBranches(query: GetAvailableBranchesQuery): Promise<BranchDto[]>;
+    getPlotState(query: GetPlotStateQuery): Promise<PlotStateDto | null>;
     listStories(query: ListStoriesQuery): Promise<StorySummaryDto[]>;
 }
 

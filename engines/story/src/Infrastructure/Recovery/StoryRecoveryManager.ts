@@ -3,6 +3,9 @@ import type { IStoryRepository } from "../../Domain/Repositories/IStoryRepositor
 import type { IStorySnapshotManager } from "../../Domain/Services/IStorySnapshotManager";
 import { StoryAggregate } from "../../Domain/Aggregates/StoryAggregate";
 import { StoryId } from "../../Domain/ValueObjects/StoryId";
+import { SceneId } from "../../Domain/ValueObjects/SceneId";
+import { BranchId } from "../../Domain/ValueObjects/BranchId";
+import { EndingId } from "../../Domain/ValueObjects/EndingId";
 
 export class StoryRecoveryManager {
     constructor(
@@ -20,7 +23,9 @@ export class StoryRecoveryManager {
 
         if (latestSnapshot) {
             const snapshot = await this.snapshotManager.takeSnapshot(storyId);
-            aggregate = await this.rehydrateFromSnapshot(snapshot, latestSnapshot.version);
+            if (snapshot && this.validateSnapshot(snapshot)) {
+                aggregate = await this.rehydrateFromSnapshot(snapshot, latestSnapshot.version, storyId);
+            }
         }
 
         if (!aggregate) {
@@ -46,12 +51,12 @@ export class StoryRecoveryManager {
         return aggregate;
     }
 
-    async recoverProjection(_projectionName: string): Promise<void> {
-        console.log(`Recovering projection: ${_projectionName}`);
+    async recoverProjection(projectionName: string): Promise<void> {
+        console.log(`Recovering projection: ${projectionName}`);
     }
 
-    async recoverWorker(_workerName: string): Promise<void> {
-        console.log(`Recovering worker: ${_workerName}`);
+    async recoverWorker(workerName: string): Promise<void> {
+        console.log(`Recovering worker: ${workerName}`);
     }
 
     validateSnapshot(snapshot: unknown): boolean {
@@ -67,27 +72,89 @@ export class StoryRecoveryManager {
         return aggregate;
     }
 
-    private async rehydrateFromSnapshot(_snapshot: object, _version: number): Promise<StoryAggregate> {
+    private async rehydrateFromSnapshot(snapshot: object, version: number, fallbackStoryId: string): Promise<StoryAggregate> {
+        const record = snapshot as Record<string, unknown>;
+        const storyIdValue = typeof record.storyId === "string" && record.storyId.length > 0 ? record.storyId : fallbackStoryId;
+        const aggregates = (record.aggregates as Record<string, unknown>) || {};
+        const storyData = aggregates.StoryAggregate as Record<string, unknown> | undefined;
+
+        if (!storyData) {
+            return StoryAggregate.reconstitute({
+                storyId: StoryId.create(storyIdValue),
+                title: "Recovered",
+                description: "",
+                state: { getValue: () => "initialized" } as any,
+                status: { getValue: () => "draft" } as any,
+                chapters: [],
+                scenes: [],
+                quests: [],
+                endings: [],
+                branches: [],
+                flags: new Map(),
+                progress: { getValue: () => ({}), withCurrentScene: () => ({} as any), withFlag: () => ({} as any) } as any,
+                version: { getValue: () => version, next: () => ({ getValue: () => version } as any) } as any,
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
+            });
+        }
+
+        const flags = new Map(Object.entries(storyData.flags as Record<string, unknown> || {}));
+        const progress = storyData.progress as any;
+
         return StoryAggregate.reconstitute({
-            storyId: StoryId.create("66666666-6666-6666-6666-666666666666"),
-            title: "Recovered",
-            description: "",
-            state: { getValue: () => "initialized" } as any,
-            status: { getValue: () => "draft" } as any,
+            storyId: StoryId.create(storyIdValue),
+            title: (storyData.title as string) || "Recovered",
+            description: (storyData.description as string) || "",
+            state: storyData.state as any,
+            status: storyData.status as any,
             chapters: [],
             scenes: [],
             quests: [],
             endings: [],
             branches: [],
-            flags: new Map(),
-            progress: { getValue: () => ({}), withCurrentScene: () => ({} as any), withFlag: () => ({} as any) } as any,
-            version: { getValue: () => _version, next: () => ({ getValue: () => _version } as any) } as any,
-            createdAt: Date.now(),
-            updatedAt: Date.now(),
+            flags,
+            progress: progress || { getValue: () => ({}), withCurrentScene: () => ({} as any), withFlag: () => ({} as any) } as any,
+            version: { getValue: () => version, next: () => ({ getValue: () => version } as any) } as any,
+            createdAt: (storyData.createdAt as number) || Date.now(),
+            updatedAt: (storyData.updatedAt as number) || Date.now(),
         });
     }
 
-    private applyEvent(_aggregate: StoryAggregate, _event: unknown): void {
-        console.log("Applying event during recovery");
+    private applyEvent(aggregate: StoryAggregate, event: { eventType: string; payload: Record<string, unknown> }): void {
+        switch (event.eventType) {
+            case "EVT_STORY_StoryStarted":
+                aggregate.start();
+                break;
+            case "EVT_STORY_SceneAdvanced": {
+                const sceneId = event.payload.sceneId as string;
+                if (sceneId) {
+                    aggregate.advanceScene(SceneId.create(sceneId));
+                }
+                break;
+            }
+            case "EVT_STORY_ChoiceSelected": {
+                const sceneId = event.payload.sceneId as string;
+                const choiceId = event.payload.choiceId as string;
+                const branchId = event.payload.branchId as string;
+                if (sceneId && choiceId && branchId) {
+                    aggregate.selectChoice(SceneId.create(sceneId), choiceId, BranchId.create(branchId));
+                }
+                break;
+            }
+            case "EVT_STORY_StoryCompleted": {
+                const endingId = event.payload.endingId as string;
+                if (endingId) {
+                    aggregate.completeStory(EndingId.create(endingId));
+                }
+                break;
+            }
+            case "EVT_STORY_StoryFailed": {
+                const reason = (event.payload.reason as string) || "Recovered failure";
+                aggregate.failStory(reason);
+                break;
+            }
+            default:
+                break;
+        }
     }
 }

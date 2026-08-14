@@ -4,6 +4,7 @@ import { StoryAggregateDto } from "../DTO/StoryAggregateDto";
 import { IStoryRepository } from "../../Domain/Repositories/IStoryRepository";
 import { IStoryDomainService } from "../../Domain/Services/IStoryDomainService";
 import { StoryAuthorizationPolicy } from "../../Domain/Policies/StoryAuthorizationPolicy";
+import { CompleteStoryValidator } from "../Validators/CompleteStoryValidator";
 import { StoryId } from "../../Domain/ValueObjects/StoryId";
 import { EndingId } from "../../Domain/ValueObjects/EndingId";
 
@@ -15,6 +16,7 @@ export class CompleteStoryCommandHandler {
     ) {}
 
     async handle(command: CompleteStoryCommand): Promise<StoryAggregateDto> {
+        CompleteStoryValidator.validate(command);
         if (!StoryAuthorizationPolicy.canCompleteStory("", command.claims)) {
             throw new Error("Unauthorized: user is not authorized to complete stories.");
         }

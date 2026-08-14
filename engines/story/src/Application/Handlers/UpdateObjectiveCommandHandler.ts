@@ -2,6 +2,7 @@ import { UpdateObjectiveCommand } from "../Commands/UpdateObjectiveCommand";
 import { ObjectiveDto } from "../DTO/ObjectiveDto";
 import { IQuestRepository } from "../../Domain/Repositories/IQuestRepository";
 import { StoryAuthorizationPolicy } from "../../Domain/Policies/StoryAuthorizationPolicy";
+import { UpdateObjectiveValidator } from "../Validators/UpdateObjectiveValidator";
 import { QuestId } from "../../Domain/ValueObjects/QuestId";
 import { ObjectiveId } from "../../Domain/ValueObjects/ObjectiveId";
 
@@ -11,6 +12,7 @@ export class UpdateObjectiveCommandHandler {
     ) {}
 
     async handle(command: UpdateObjectiveCommand): Promise<ObjectiveDto> {
+        UpdateObjectiveValidator.validate(command);
         if (!StoryAuthorizationPolicy.canUpdateQuest("", command.claims)) {
             throw new Error("Unauthorized: user is not authorized to update objectives.");
         }

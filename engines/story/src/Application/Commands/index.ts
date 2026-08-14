@@ -1,5 +1,6 @@
 export * from "./StartStoryCommand";
 export * from "./AdvanceSceneCommand";
+export * from "./AdvancePlotCommand";
 export * from "./SelectChoiceCommand";
 export * from "./CompleteStoryCommand";
 export * from "./FailStoryCommand";

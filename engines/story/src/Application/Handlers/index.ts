@@ -1,5 +1,6 @@
 export * from "./StartStoryCommandHandler";
 export * from "./AdvanceSceneCommandHandler";
+export * from "./AdvancePlotCommandHandler";
 export * from "./SelectChoiceCommandHandler";
 export * from "./CompleteStoryCommandHandler";
 export * from "./FailStoryCommandHandler";
@@ -9,4 +10,5 @@ export * from "./GetStoryQueryHandler";
 export * from "./GetStoryProgressQueryHandler";
 export * from "./GetQuestQueryHandler";
 export * from "./GetAvailableBranchesQueryHandler";
+export * from "./GetPlotStateQueryHandler";
 export * from "./ListStoriesQueryHandler";

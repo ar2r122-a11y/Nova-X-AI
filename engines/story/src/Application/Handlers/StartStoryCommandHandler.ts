@@ -4,6 +4,7 @@ import { StoryAggregateDto } from "../DTO/StoryAggregateDto";
 import { IStoryRepository } from "../../Domain/Repositories/IStoryRepository";
 import { IStoryDomainService } from "../../Domain/Services/IStoryDomainService";
 import { StoryAuthorizationPolicy } from "../../Domain/Policies/StoryAuthorizationPolicy";
+import { StartStoryValidator } from "../Validators/StartStoryValidator";
 import { StoryId } from "../../Domain/ValueObjects/StoryId";
 
 export class StartStoryCommandHandler {
@@ -14,6 +15,7 @@ export class StartStoryCommandHandler {
     ) {}
 
     async handle(command: StartStoryCommand): Promise<StoryAggregateDto> {
+        StartStoryValidator.validate(command);
         if (!StoryAuthorizationPolicy.canStartStory("", command.claims)) {
             throw new Error("Unauthorized: user is not authorized to start stories.");
         }

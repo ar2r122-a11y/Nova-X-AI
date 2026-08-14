@@ -4,6 +4,7 @@ import { StoryAggregateDto } from "../DTO/StoryAggregateDto";
 import { IStoryRepository } from "../../Domain/Repositories/IStoryRepository";
 import { IStoryDomainService } from "../../Domain/Services/IStoryDomainService";
 import { StoryAuthorizationPolicy } from "../../Domain/Policies/StoryAuthorizationPolicy";
+import { FailStoryValidator } from "../Validators/FailStoryValidator";
 import { StoryId } from "../../Domain/ValueObjects/StoryId";
 
 export class FailStoryCommandHandler {
@@ -14,6 +15,7 @@ export class FailStoryCommandHandler {
     ) {}
 
     async handle(command: FailStoryCommand): Promise<StoryAggregateDto> {
+        FailStoryValidator.validate(command);
         if (!StoryAuthorizationPolicy.canFailStory("", command.claims)) {
             throw new Error("Unauthorized: user is not authorized to fail stories.");
         }

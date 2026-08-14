@@ -4,6 +4,7 @@ import { StoryAggregateDto } from "../DTO/StoryAggregateDto";
 import { IStoryRepository } from "../../Domain/Repositories/IStoryRepository";
 import { IStoryDomainService } from "../../Domain/Services/IStoryDomainService";
 import { StoryAuthorizationPolicy } from "../../Domain/Policies/StoryAuthorizationPolicy";
+import { SelectChoiceValidator } from "../Validators/SelectChoiceValidator";
 import { StoryId } from "../../Domain/ValueObjects/StoryId";
 import { SceneId } from "../../Domain/ValueObjects/SceneId";
 import { BranchId } from "../../Domain/ValueObjects/BranchId";
@@ -16,6 +17,7 @@ export class SelectChoiceCommandHandler {
     ) {}
 
     async handle(command: SelectChoiceCommand): Promise<StoryAggregateDto> {
+        SelectChoiceValidator.validate(command);
         if (!StoryAuthorizationPolicy.canSelectChoice("", command.claims)) {
             throw new Error("Unauthorized: user is not authorized to select choices.");
         }

@@ -5,3 +5,5 @@ export * from "./ChoiceSelectedEvent";
 export * from "./QuestUpdatedEvent";
 export * from "./StoryCompletedEvent";
 export * from "./StoryFailedEvent";
+export * from "./PlotAdvancedEvent";
+export * from "./CrossEngineEvents";

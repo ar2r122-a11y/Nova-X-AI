@@ -3,6 +3,7 @@ import { QuestDto } from "../DTO/QuestDto";
 import { IStoryRepository } from "../../Domain/Repositories/IStoryRepository";
 import { IQuestRepository } from "../../Domain/Repositories/IQuestRepository";
 import { StoryAuthorizationPolicy } from "../../Domain/Policies/StoryAuthorizationPolicy";
+import { UpdateQuestValidator } from "../Validators/UpdateQuestValidator";
 import { StoryId } from "../../Domain/ValueObjects/StoryId";
 import { QuestId } from "../../Domain/ValueObjects/QuestId";
 
@@ -13,6 +14,7 @@ export class UpdateQuestCommandHandler {
     ) {}
 
     async handle(command: UpdateQuestCommand): Promise<QuestDto> {
+        UpdateQuestValidator.validate(command);
         if (!StoryAuthorizationPolicy.canUpdateQuest("", command.claims)) {
             throw new Error("Unauthorized: user is not authorized to update quests.");
         }

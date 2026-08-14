@@ -73,7 +73,7 @@ export class StoryAggregate {
             storyId.getValue(),
             title,
             now,
-            ""
+            crypto.randomUUID()
         ));
 
         return aggregate;
@@ -168,7 +168,7 @@ export class StoryAggregate {
             this.props.storyId.getValue(),
             this.props.title,
             Date.now(),
-            ""
+            crypto.randomUUID()
         ));
     }
 
@@ -203,7 +203,7 @@ export class StoryAggregate {
             sceneId.getValue(),
             previousSceneId ?? "",
             Date.now(),
-            ""
+            crypto.randomUUID()
         ));
     }
 
@@ -242,7 +242,7 @@ export class StoryAggregate {
             branchId.getValue(),
             selectedFlags,
             Date.now(),
-            ""
+            crypto.randomUUID()
         ));
     }
 
@@ -273,7 +273,7 @@ export class StoryAggregate {
             endingId.getValue(),
             finalFlags,
             Date.now(),
-            ""
+            crypto.randomUUID()
         ));
     }
 
@@ -289,7 +289,7 @@ export class StoryAggregate {
             this.props.storyId.getValue(),
             reason,
             Date.now(),
-            ""
+            crypto.randomUUID()
         ));
     }
 
