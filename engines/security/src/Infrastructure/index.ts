@@ -11,3 +11,7 @@ export * from "./Coordinator/CrossEngineSecurityCoordinator";
 export * from "./ProjectionUpdater";
 export * from "./RecoveryWorker";
 export * from "./Workers";
+export * from "./ContentBoundary";
+export * from "./AgeControl";
+export * from "./ProviderPolicy";
+export * from "./Safety";

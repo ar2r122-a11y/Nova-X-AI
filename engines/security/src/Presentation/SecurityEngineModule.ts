@@ -2,8 +2,8 @@ import { ICoreModule } from "@nova-x-ai/core";
 import type { IContainer, IEventBus } from "@nova-x-ai/core";
 import type { ISecurityEngine } from "../Contracts";
 import { SecurityEngineAggregate } from "../Domain/Aggregates";
-import { SecurityBudgetDto, SecurityClaimsDto, PermissionResultDto, SessionValidationResultDto, VaultStatusDto, AuditLogDto } from "../Application/DTO";
-import { SecuritySession, SecurityToken, SecurityPolicy, CredentialVaultEntry, AuditLogEntry } from "../Domain/Entities";
+import { SecurityBudgetDto, SecurityClaimsDto, PermissionResultDto, SessionValidationResultDto, VaultStatusDto, AuditLogDto, ContentBoundaryDto, AgeControlDto, ProviderPolicyDto, SafetyEventDto } from "../Application/DTO";
+import { SecuritySession, SecurityToken, SecurityPolicy, CredentialVaultEntry, AuditLogEntry, ContentBoundary, AgeControl, ProviderPolicy, SafetyEvent } from "../Domain/Entities";
 import { LockoutReason } from "../Domain/ValueObjects";
 import { WebCryptoAdapter } from "../Infrastructure/Crypto/WebCryptoAdapter";
 import { SecureCredentialVault } from "../Infrastructure/Vault/SecureCredentialVault";
@@ -18,6 +18,10 @@ import { CrossEngineSecurityCoordinator } from "../Infrastructure/Coordinator/Cr
 import { SecurityProjectionUpdater } from "../Infrastructure/ProjectionUpdater";
 import { SecurityRecoveryWorker } from "../Infrastructure/RecoveryWorker";
 import { SessionStreamingWorker, TokenAccumulator, IdentityChunkAssembler } from "../Infrastructure/Workers";
+import { ContentBoundaryEvaluator } from "../Infrastructure/ContentBoundary";
+import { AgeControlEnforcer } from "../Infrastructure/AgeControl";
+import { ProviderPolicyCompatibilityChecker } from "../Infrastructure/ProviderPolicy";
+import { SafetyEventManager } from "../Infrastructure/Safety";
 import type { ISecurityWorker } from "../Contracts";
 
 export class SecurityEngineModule implements ICoreModule {
@@ -40,6 +44,10 @@ export class SecurityEngineModule implements ICoreModule {
         const revocationPipeline = new TokenRevocationPipeline();
         const coordinator = new CrossEngineSecurityCoordinator();
         const eventBus = {} as IEventBus;
+        const contentBoundaryEvaluator = new ContentBoundaryEvaluator();
+        const ageControlEnforcer = new AgeControlEnforcer();
+        const providerPolicyCompatibilityChecker = new ProviderPolicyCompatibilityChecker();
+        const safetyEventManager = new SafetyEventManager();
 
         const securityImpl: ISecurityEngine = {
             get eventBus() { return eventBus; },
@@ -144,6 +152,39 @@ export class SecurityEngineModule implements ICoreModule {
             },
             setBudget(budget: SecurityBudgetDto): void {
                 budgetAllocator.updateBudget(budget);
+            },
+            async addContentBoundary(boundary: ContentBoundary): Promise<void> {
+                aggregate.addContentBoundary(boundary);
+            },
+            getContentBoundary(boundaryId: string): ContentBoundary | undefined {
+                return aggregate.getContentBoundary(boundaryId);
+            },
+            getContentBoundaries(identityId?: string): ContentBoundary[] {
+                return aggregate.getContentBoundaries(identityId);
+            },
+            async addAgeControl(control: AgeControl): Promise<void> {
+                aggregate.addAgeControl(control);
+            },
+            getAgeControl(controlId: string): AgeControl | undefined {
+                return aggregate.getAgeControl(controlId);
+            },
+            getAgeControls(identityId: string): AgeControl[] {
+                return aggregate.getAgeControls(identityId);
+            },
+            async addProviderPolicy(policy: ProviderPolicy): Promise<void> {
+                aggregate.addProviderPolicy(policy);
+            },
+            getProviderPolicy(policyId: string): ProviderPolicy | undefined {
+                return aggregate.getProviderPolicy(policyId);
+            },
+            getAllProviderPolicies(): ProviderPolicy[] {
+                return aggregate.getAllProviderPolicies();
+            },
+            async appendSafetyEvent(event: SafetyEvent): Promise<void> {
+                aggregate.appendSafetyEvent(event);
+            },
+            getSafetyEvents(limit: number = 100): SafetyEvent[] {
+                return aggregate.getSafetyEvents(limit);
             }
         };
 

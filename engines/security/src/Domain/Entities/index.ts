@@ -60,3 +60,51 @@ export interface AuditLogEntry {
     readonly metadata: Record<string, unknown>;
     readonly signature: string;
 }
+
+export interface ContentBoundary {
+    readonly boundaryId: string;
+    readonly name: string;
+    readonly description: string;
+    readonly allowedCategories: string[];
+    readonly blockedCategories: string[];
+    readonly severityThreshold: "low" | "medium" | "high" | "strict";
+    readonly identityId?: string;
+    readonly createdAt: number;
+    readonly updatedAt: number;
+}
+
+export interface AgeControl {
+    readonly controlId: string;
+    readonly identityId: string;
+    readonly ageRating: "child" | "teen" | "adult" | "unrestricted";
+    readonly blockedContentTypes: string[];
+    readonly allowedContentTypes: string[];
+    readonly requiresParentalConsent: boolean;
+    readonly createdAt: number;
+    readonly updatedAt: number;
+}
+
+export interface ProviderPolicy {
+    readonly policyId: string;
+    readonly providerId: string;
+    readonly providerName: string;
+    readonly allowedContentCategories: string[];
+    readonly blockedContentCategories: string[];
+    readonly safetySettings: Record<string, unknown>;
+    readonly compatible: boolean;
+    readonly createdAt: number;
+    readonly updatedAt: number;
+}
+
+export interface SafetyEvent {
+    readonly eventId: string;
+    readonly eventType: string;
+    readonly severity: "info" | "warning" | "error" | "critical";
+    readonly source: string;
+    readonly identityId?: string;
+    readonly resource: string;
+    readonly action: string;
+    readonly details: Record<string, unknown>;
+    readonly timestamp: number;
+    readonly correlationId: string;
+}

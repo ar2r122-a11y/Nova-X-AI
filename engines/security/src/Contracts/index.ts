@@ -1,6 +1,6 @@
 import type { IEventBus } from "@nova-x-ai/core";
-import type { SecuritySession, SecurityToken, SecurityPolicy, CredentialVaultEntry, AuditLogEntry } from "../Domain";
-import { SecurityBudgetDto, SecurityClaimsDto, PermissionResultDto, SessionValidationResultDto, VaultStatusDto, AuditLogDto } from "../Application";
+import type { SecuritySession, SecurityToken, SecurityPolicy, CredentialVaultEntry, AuditLogEntry, ContentBoundary, AgeControl, ProviderPolicy, SafetyEvent } from "../Domain";
+import { SecurityBudgetDto, SecurityClaimsDto, PermissionResultDto, SessionValidationResultDto, VaultStatusDto, AuditLogDto, ContentBoundaryDto, AgeControlDto, ProviderPolicyDto, SafetyEventDto } from "../Application";
 
 export interface ISecurityEngine {
     readonly eventBus: IEventBus;
@@ -26,6 +26,17 @@ export interface ISecurityEngine {
     getSecurityBudget(): SecurityBudgetDto;
     setBudget(budget: SecurityBudgetDto): void;
     getAggregate(): import("../Domain/Aggregates").SecurityEngineAggregate;
+    addContentBoundary(boundary: ContentBoundary): Promise<void>;
+    getContentBoundary(boundaryId: string): ContentBoundary | undefined;
+    getContentBoundaries(identityId?: string): ContentBoundary[];
+    addAgeControl(control: AgeControl): Promise<void>;
+    getAgeControl(controlId: string): AgeControl | undefined;
+    getAgeControls(identityId: string): AgeControl[];
+    addProviderPolicy(policy: ProviderPolicy): Promise<void>;
+    getProviderPolicy(policyId: string): ProviderPolicy | undefined;
+    getAllProviderPolicies(): ProviderPolicy[];
+    appendSafetyEvent(event: SafetyEvent): Promise<void>;
+    getSafetyEvents(limit?: number): SafetyEvent[];
 }
 
 export interface ISecurityWorker {
@@ -63,4 +74,21 @@ export interface ISanitizer {
 export interface IAuditLogger {
     log(entry: Omit<AuditLogEntry, "logId" | "timestamp" | "signature">): Promise<AuditLogEntry>;
     getLog(identityId?: string, limit?: number): Promise<AuditLogEntry[]>;
+}
+
+export interface IContentBoundaryEvaluator {
+    evaluate(boundary: ContentBoundary, category: string): { allowed: boolean; reason?: string };
+}
+
+export interface IAgeControlEnforcer {
+    enforce(control: AgeControl, contentRating: string): { allowed: boolean; reason?: string };
+}
+
+export interface IProviderPolicyCompatibilityChecker {
+    checkCompatibility(policy: ProviderPolicy, contentCategory: string): { compatible: boolean; reason?: string };
+}
+
+export interface ISafetyEventManager {
+    logEvent(event: Omit<SafetyEvent, "eventId" | "timestamp" | "correlationId">): Promise<SafetyEvent>;
+    getEvents(identityId?: string, severity?: string, limit?: number): Promise<SafetyEvent[]>;
 }

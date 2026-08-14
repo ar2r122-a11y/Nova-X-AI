@@ -67,3 +67,59 @@ export class SessionValidationResultDto {
         public readonly error?: string
     ) {}
 }
+
+export class ContentBoundaryDto {
+    constructor(
+        public readonly boundaryId: string,
+        public readonly name: string,
+        public readonly description: string,
+        public readonly allowedCategories: string[],
+        public readonly blockedCategories: string[],
+        public readonly severityThreshold: string,
+        public readonly createdAt: number,
+        public readonly updatedAt: number,
+        public readonly identityId?: string
+    ) {}
+}
+
+export class AgeControlDto {
+    constructor(
+        public readonly controlId: string,
+        public readonly identityId: string,
+        public readonly ageRating: string,
+        public readonly blockedContentTypes: string[],
+        public readonly allowedContentTypes: string[],
+        public readonly requiresParentalConsent: boolean,
+        public readonly createdAt: number,
+        public readonly updatedAt: number
+    ) {}
+}
+
+export class ProviderPolicyDto {
+    constructor(
+        public readonly policyId: string,
+        public readonly providerId: string,
+        public readonly providerName: string,
+        public readonly allowedContentCategories: string[],
+        public readonly blockedContentCategories: string[],
+        public readonly safetySettings: Record<string, unknown>,
+        public readonly compatible: boolean,
+        public readonly createdAt: number,
+        public readonly updatedAt: number
+    ) {}
+}
+
+export class SafetyEventDto {
+    constructor(
+        public readonly eventId: string,
+        public readonly eventType: string,
+        public readonly severity: string,
+        public readonly source: string,
+        public readonly resource: string,
+        public readonly action: string,
+        public readonly details: Record<string, unknown>,
+        public readonly timestamp: number,
+        public readonly correlationId: string,
+        public readonly identityId?: string
+    ) {}
+}

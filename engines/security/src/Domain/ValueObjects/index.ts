@@ -117,6 +117,10 @@ export class LockoutReason {
         return new LockoutReason("manual_administrative");
     }
 
+    public static fromString(value: string): LockoutReason {
+        return new LockoutReason(value);
+    }
+
     public getValue(): string {
         return this.value;
     }

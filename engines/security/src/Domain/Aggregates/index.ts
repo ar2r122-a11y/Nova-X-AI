@@ -1,5 +1,5 @@
-import { SecuritySession, SecurityToken, SecurityPolicy, CredentialVaultEntry, AuditLogEntry } from "../Entities";
-import { SessionValidatedEvent, LockoutEvent, TokenRevokedEvent, KeyRotatedEvent } from "../Events";
+import { SecuritySession, SecurityToken, SecurityPolicy, CredentialVaultEntry, AuditLogEntry, ContentBoundary, AgeControl, ProviderPolicy, SafetyEvent } from "../Entities";
+import { SessionValidatedEvent, LockoutEvent, TokenRevokedEvent, KeyRotatedEvent, ContentBoundaryViolationEvent, AgeControlViolationEvent, SafetyViolationEvent, ProviderPolicyIncompatibleEvent } from "../Events";
 import { SessionId } from "../ValueObjects";
 import { LockoutReason } from "../ValueObjects";
 
@@ -9,7 +9,11 @@ export class SecurityEngineAggregate {
     private readonly policies = new Map<string, SecurityPolicy>();
     private readonly vaultEntries = new Map<string, CredentialVaultEntry>();
     private readonly auditLog: AuditLogEntry[] = [];
-    private state: "initialized" | "running" | "locked" | "failed" = "initialized";
+    private readonly contentBoundaries = new Map<string, ContentBoundary>();
+    private readonly ageControls = new Map<string, AgeControl>();
+    private readonly providerPolicies = new Map<string, ProviderPolicy>();
+    private readonly safetyEvents: SafetyEvent[] = [];
+    private state: "initialized" | "running" | "locked" | "failed" | "stopped" = "initialized";
     private lockoutReason: LockoutReason | null = null;
 
     constructor() {}
@@ -141,7 +145,11 @@ export class SecurityEngineAggregate {
         this.tokens.set(token.tokenId, token);
     }
 
-    public setState(state: "initialized" | "running" | "locked" | "failed"): void {
+    public removeToken(tokenId: string): boolean {
+        return this.tokens.delete(tokenId);
+    }
+
+    public setState(state: "initialized" | "running" | "locked" | "failed" | "stopped"): void {
         this.state = state;
     }
 
@@ -151,5 +159,51 @@ export class SecurityEngineAggregate {
 
     public getLockoutReason(): LockoutReason | null {
         return this.lockoutReason;
+    }
+
+    public addContentBoundary(boundary: ContentBoundary): void {
+        this.contentBoundaries.set(boundary.boundaryId, boundary);
+    }
+
+    public getContentBoundary(boundaryId: string): ContentBoundary | undefined {
+        return this.contentBoundaries.get(boundaryId);
+    }
+
+    public getContentBoundaries(identityId?: string): ContentBoundary[] {
+        const all = Array.from(this.contentBoundaries.values());
+        if (!identityId) return all;
+        return all.filter(b => b.identityId === identityId || !b.identityId);
+    }
+
+    public addAgeControl(control: AgeControl): void {
+        this.ageControls.set(control.controlId, control);
+    }
+
+    public getAgeControl(controlId: string): AgeControl | undefined {
+        return this.ageControls.get(controlId);
+    }
+
+    public getAgeControls(identityId: string): AgeControl[] {
+        return Array.from(this.ageControls.values()).filter(c => c.identityId === identityId);
+    }
+
+    public addProviderPolicy(policy: ProviderPolicy): void {
+        this.providerPolicies.set(policy.policyId, policy);
+    }
+
+    public getProviderPolicy(policyId: string): ProviderPolicy | undefined {
+        return this.providerPolicies.get(policyId);
+    }
+
+    public getAllProviderPolicies(): ProviderPolicy[] {
+        return Array.from(this.providerPolicies.values());
+    }
+
+    public appendSafetyEvent(event: SafetyEvent): void {
+        this.safetyEvents.push(event);
+    }
+
+    public getSafetyEvents(limit: number = 100): SafetyEvent[] {
+        return this.safetyEvents.slice(-limit);
     }
 }

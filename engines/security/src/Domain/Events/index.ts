@@ -145,3 +145,71 @@ export class SecurityBudgetExceededEvent implements IDomainEvent {
         this.correlationId = correlationId;
     }
 }
+
+export class ContentBoundaryViolationEvent implements IDomainEvent {
+    readonly eventType = "EVT_SEC_ContentBoundaryViolation";
+    readonly timestamp: number;
+    readonly correlationId: string;
+
+    constructor(
+        public readonly boundaryId: string,
+        public readonly identityId: string,
+        public readonly category: string,
+        public readonly severity: string,
+        correlationId: string
+    ) {
+        this.timestamp = Date.now();
+        this.correlationId = correlationId;
+    }
+}
+
+export class AgeControlViolationEvent implements IDomainEvent {
+    readonly eventType = "EVT_SEC_AgeControlViolation";
+    readonly timestamp: number;
+    readonly correlationId: string;
+
+    constructor(
+        public readonly controlId: string,
+        public readonly identityId: string,
+        public readonly contentRating: string,
+        public readonly userAgeGroup: string,
+        correlationId: string
+    ) {
+        this.timestamp = Date.now();
+        this.correlationId = correlationId;
+    }
+}
+
+export class SafetyViolationEvent implements IDomainEvent {
+    readonly eventType = "EVT_SEC_SafetyViolation";
+    readonly timestamp: number;
+    readonly correlationId: string;
+
+    constructor(
+        public readonly eventId: string,
+        public readonly source: string,
+        public readonly severity: string,
+        public readonly resource: string,
+        public readonly action: string,
+        correlationId: string
+    ) {
+        this.timestamp = Date.now();
+        this.correlationId = correlationId;
+    }
+}
+
+export class ProviderPolicyIncompatibleEvent implements IDomainEvent {
+    readonly eventType = "EVT_SEC_ProviderPolicyIncompatible";
+    readonly timestamp: number;
+    readonly correlationId: string;
+
+    constructor(
+        public readonly policyId: string,
+        public readonly providerId: string,
+        public readonly reason: string,
+        correlationId: string
+    ) {
+        this.timestamp = Date.now();
+        this.correlationId = correlationId;
+    }
+}

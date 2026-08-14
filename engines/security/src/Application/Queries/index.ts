@@ -27,3 +27,29 @@ export class GetVaultStatusQuery implements IQuery {
         public readonly identityId?: string
     ) {}
 }
+
+export class GetContentBoundariesQuery implements IQuery {
+    constructor(
+        public readonly identityId?: string
+    ) {}
+}
+
+export class GetAgeControlsQuery implements IQuery {
+    constructor(
+        public readonly identityId: string
+    ) {}
+}
+
+export class GetProviderPoliciesQuery implements IQuery {
+    constructor(
+        public readonly providerId?: string
+    ) {}
+}
+
+export class GetSafetyEventsQuery implements IQuery {
+    constructor(
+        public readonly identityId?: string,
+        public readonly severity?: string,
+        public readonly limit: number = 100
+    ) {}
+}
