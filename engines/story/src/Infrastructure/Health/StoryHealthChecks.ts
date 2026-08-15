@@ -4,7 +4,6 @@ import type { IStoryEventStoreRepository } from "../../Domain/Repositories/IStor
 import { ProjectionEngine } from "../../Infrastructure/Projections/ProjectionEngine";
 import type { IStoryRuntime } from "../../Application/Services/IStoryRuntime";
 import type { IWorkerLifecycleManager } from "../../Infrastructure/Workers/IWorkerLifecycleManager";
-import type { IStoryWorker } from "../../Infrastructure/Workers/IStoryWorker";
 
 export interface StoryHealthStatus {
     readonly checks: Array<{
@@ -17,7 +16,7 @@ export interface StoryHealthStatus {
 
 export class StoryHealthChecks {
     constructor(
-        private readonly eventBus: IEventBus,
+        _eventBus: IEventBus,
         private readonly storyRepository: IStoryRepository,
         private readonly eventStoreRepository: IStoryEventStoreRepository,
         private readonly projectionEngine: ProjectionEngine,
@@ -36,14 +35,14 @@ export class StoryHealthChecks {
         }
 
         try {
-            const eventStoreVersion = await this.eventStoreRepository.getStreamVersion("health-check");
+            await this.eventStoreRepository.getStreamVersion("health-check");
             checks.push({ name: "eventStore", status: "healthy" });
         } catch {
             checks.push({ name: "eventStore", status: "unhealthy", details: "Event Store check failed" });
         }
 
         try {
-            const projectionStatus = await this.projectionEngine.getStatus();
+            await this.projectionEngine.getStatus();
             checks.push({ name: "projection", status: "healthy" });
         } catch {
             checks.push({ name: "projection", status: "unhealthy", details: "Projection check failed" });

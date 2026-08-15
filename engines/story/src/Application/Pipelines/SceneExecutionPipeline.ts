@@ -10,7 +10,7 @@ import { SceneId } from "../../Domain/ValueObjects/SceneId";
 export class SceneExecutionPipeline implements ISceneExecutionPipeline {
     constructor(
         private readonly storyRepository: IStoryRepository,
-        private readonly eventStoreRepository: IStoryEventStoreRepository,
+        _eventStoreRepository: IStoryEventStoreRepository,
         private readonly branchingService: IBranchingService,
         private readonly storyDomainService: IStoryDomainService,
         private readonly eventBus: IEventBus

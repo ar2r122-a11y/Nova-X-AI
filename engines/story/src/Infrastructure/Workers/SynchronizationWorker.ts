@@ -1,5 +1,4 @@
 import type { IEventBus } from "@nova-x-ai/core";
-import type { IStoryWorker } from "./IStoryWorker";
 import { BaseStoryWorker } from "./BaseStoryWorker";
 import { WorkerHealthState } from "../../Domain/ValueObjects/WorkerHealthState";
 

@@ -9,7 +9,7 @@ import { SceneId } from "../../Domain/ValueObjects/SceneId";
 
 export class AdvancePlotCommandHandler {
     constructor(
-        private readonly eventBus: IEventBus,
+        _eventBus: IEventBus,
         private readonly storyRepository: IStoryRepository,
         private readonly storyDomainService: IStoryDomainService
     ) {}

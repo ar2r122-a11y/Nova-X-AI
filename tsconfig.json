@@ -27,7 +27,16 @@
       "@nova-x-ai/image/*": ["engines/image/src/*"],
       "@nova-x-ai/conversation": ["engines/conversation/src/index.ts"],
       "@nova-x-ai/character": ["engines/character/src/index.ts"],
-      "@nova-x-ai/analytics": ["engines/analytics/src/index.ts"]
+      "@nova-x-ai/analytics": ["engines/analytics/src/index.ts"],
+      "@nova-x-ai/diagnostics": ["engines/diagnostics/src/index.ts"],
+      "@nova-x-ai/memory": ["engines/memory/src/index.ts"],
+      "@nova-x-ai/emotion": ["engines/emotion/src/index.ts"],
+      "@nova-x-ai/relationship": ["engines/relationship/src/index.ts"],
+      "@nova-x-ai/world": ["engines/world/src/index.ts"],
+      "@nova-x-ai/story": ["engines/story/src/index.ts"],
+      "@nova-x-ai/voice": ["engines/voice/src/index.ts"],
+      "@nova-x-ai/plugin": ["engines/plugin/src/index.ts"],
+      "@nova-x-ai/deployment-operations": ["engines/deployment-operations/src/index.ts"]
     }
   },
   "include": ["src"],

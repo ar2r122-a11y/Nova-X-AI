@@ -8,7 +8,7 @@ export class StoryProgressionSaga implements IStoryProgressionSaga {
 
     constructor(
         private readonly eventBus: IEventBus,
-        private readonly storyRepository: IStoryRepository
+        _storyRepository: IStoryRepository
     ) {}
 
     async initialize(storyId: string): Promise<void> {

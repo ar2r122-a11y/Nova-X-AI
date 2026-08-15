@@ -30,7 +30,7 @@ export class StorySecurityBoundary {
         }
     }
 
-    async authorizeQuery(query: { requesterId?: string }, context: StorySecurityContext): Promise<void> {
+    async authorizeQuery(_query: { requesterId?: string }, context: StorySecurityContext): Promise<void> {
         if (!context) {
             throw new Error("Security context is required.");
         }

@@ -1,5 +1,4 @@
 import { Scene } from "../Entities/Scene";
-import { SceneStatus } from "../ValueObjects/SceneStatus";
 
 export class SceneIsAccessibleSpecification {
     static isSatisfiedBy(

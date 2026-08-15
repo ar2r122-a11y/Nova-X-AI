@@ -4,12 +4,11 @@ import { IStoryRepository } from "../../Domain/Repositories/IStoryRepository";
 import { IQuestRepository } from "../../Domain/Repositories/IQuestRepository";
 import { StoryAuthorizationPolicy } from "../../Domain/Policies/StoryAuthorizationPolicy";
 import { UpdateQuestValidator } from "../Validators/UpdateQuestValidator";
-import { StoryId } from "../../Domain/ValueObjects/StoryId";
 import { QuestId } from "../../Domain/ValueObjects/QuestId";
 
 export class UpdateQuestCommandHandler {
     constructor(
-        private readonly storyRepository: IStoryRepository,
+        _storyRepository: IStoryRepository,
         private readonly questRepository: IQuestRepository
     ) {}
 

@@ -67,7 +67,16 @@ export class AIRouter {
         this.onProviderRegistered = options.onProviderRegistered;
         this.onProviderStatusChanged = options.onProviderStatusChanged;
         this.selector = new ProviderSelector(
-            this.providers
+            this.providers,
+            (provider) => {
+                const registration =
+                    this.registrations.get(
+                        provider.id.value
+                    );
+                return registration
+                    ? registration.priority
+                    : 0;
+            }
         );
     }
 

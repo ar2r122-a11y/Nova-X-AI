@@ -84,7 +84,7 @@ export class EndingRegistryAggregate {
         this.props.updatedAt = Date.now();
     }
 
-    unlockEnding(endingId: EndingId, context: Record<string, unknown>): void {
+    unlockEnding(endingId: EndingId, _context: Record<string, unknown>): void {
         const ending = this.props.endings.find((e) => e.getId().equals(endingId));
         if (!ending) {
             throw new Error(`Ending not found: ${endingId.getValue()}`);

@@ -48,6 +48,7 @@ const MORAL_ALIGNMENTS = ["Lawful Good", "Neutral Good", "Chaotic Good", "Lawful
 export default function CharacterCreate() {
     const navigate = useNavigate();
     const addCharacter = useAppStore((s) => s.addCharacter);
+    const addImage = useAppStore((s) => s.addImage);
     const [step, setStep] = useState<Step>(1);
     const [saving, setSaving] = useState(false);
     const [generating, setGenerating] = useState(false);
@@ -277,6 +278,26 @@ export default function CharacterCreate() {
             };
 
             addCharacter(newCharacter);
+
+            if (selectedCandidateId && generatedCandidates.length > 0) {
+                const imageRecord = {
+                    id: `img-${Date.now()}`,
+                    characterId,
+                    prompt: buildPrompt(),
+                    candidates: generatedCandidates.map((c: any) => ({
+                        id: c.id,
+                        uri: c.uri,
+                        score: c.score || 0,
+                        width: c.width,
+                        height: c.height
+                    })),
+                    selectedCandidateId,
+                    status: "Completed",
+                    createdAt: Date.now()
+                };
+                addImage(imageRecord);
+            }
+
             navigate(`/characters/${characterId}`);
         } catch (err) {
             setError(err instanceof Error ? err.message : "Failed to save character");
@@ -327,10 +348,10 @@ export default function CharacterCreate() {
                                 <h2>Identity</h2>
                                 <p className="step-subtitle">Define who your character is.</p>
                                 <div className="form-row">
-                                    <div className="form-group">
-                                        <label>Character Name *</label>
-                                        <input type="text" value={identity.name} onChange={(e) => setIdentity({ ...identity, name: e.target.value })} placeholder="e.g. Aria" />
-                                    </div>
+                                <div className="form-group">
+                                    <label>Character Name *</label>
+                                    <input id="name" type="text" value={identity.name} onChange={(e) => setIdentity({ ...identity, name: e.target.value })} placeholder="e.g. Aria" />
+                                </div>
                                     <div className="form-group">
                                         <label>Title / Nickname</label>
                                         <input type="text" value={identity.title} onChange={(e) => setIdentity({ ...identity, title: e.target.value })} placeholder="e.g. The Shadow Dancer" />
@@ -368,7 +389,7 @@ export default function CharacterCreate() {
                                 </div>
                                 <div className="form-group">
                                     <label>Short Description</label>
-                                    <textarea value={identity.description} onChange={(e) => setIdentity({ ...identity, description: e.target.value })} placeholder="A brief summary of the character..." rows={3} />
+                                    <textarea id="description" value={identity.description} onChange={(e) => setIdentity({ ...identity, description: e.target.value })} placeholder="A brief summary of the character..." rows={3} />
                                 </div>
                                 <div className="form-group">
                                     <label>Tags (comma separated)</label>

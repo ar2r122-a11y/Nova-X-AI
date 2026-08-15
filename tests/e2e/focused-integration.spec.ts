@@ -7,7 +7,7 @@ test.describe("Focused Integration Checkpoint", () => {
     });
 
     test("character create -> generate image -> gallery -> chat flow", async ({ page }) => {
-        test.setTimeout(120000);
+        test.setTimeout(180000);
         const errors: string[] = [];
         page.on("pageerror", (err) => errors.push(err.message));
         page.on("console", (msg) => {
@@ -25,20 +25,33 @@ test.describe("Focused Integration Checkpoint", () => {
         await page.waitForURL("**/characters/create");
         await expect(page.locator("h1")).toContainText("Create Character");
 
-        // Step 3: Create character
+        // Step 3: Fill identity
         await page.fill('input[id="name"]', "Test Hero");
         await page.fill('textarea[id="description"]', "A brave test character");
-        await page.click('button[type="submit"]');
-        await page.waitForURL("**/characters/**");
-        await expect(page.locator("h1")).toContainText("Test Hero");
+        await page.click('button.primary:has-text("Next")');
+        await page.waitForTimeout(500);
 
-        // Step 4: Generate image
-        await page.fill('input[type="text"]', "a beautiful sunset over mountains");
-        await page.click(".generation-form button");
+        // Step 4: Select appearance
+        await page.locator('label:has-text("Body Type")').locator('..').locator('button:has-text("Athletic")').click();
+        await page.locator('label:has-text("Hair Color")').locator('..').getByRole('button', { name: 'Brown', exact: true }).click();
+        await page.click('button.primary:has-text("Next")');
+        await page.waitForTimeout(500);
+
+        // Step 5: Select personality trait
+        await page.locator('.trait-grid button:has-text("Loyal")').click();
+        await page.click('button.primary:has-text("Next")');
+        await page.waitForTimeout(500);
+
+        // Step 6: Review -> proceed to generation
+        await page.click('button.primary:has-text("Next")');
+        await page.waitForTimeout(500);
+
+        // Step 7: Generate avatars
+        await page.click('button:has-text("Generate Avatars")');
         await page.waitForSelector(".candidate-grid", { timeout: 60000 });
 
         // Verify candidates have real URIs
-        const candidateImages = page.locator(".candidate img");
+        const candidateImages = page.locator(".candidate-card img");
         const count = await candidateImages.count();
         expect(count).toBeGreaterThan(0);
         for (let i = 0; i < count; i++) {
@@ -47,30 +60,31 @@ test.describe("Focused Integration Checkpoint", () => {
             expect(src).not.toContain("placeholder");
         }
 
-        // Step 5: Select candidate
-        await page.locator(".candidate").first().locator("button.select-btn").click();
-        await expect(page.locator(".candidate.selected").first()).toBeVisible();
+        // Step 8: Select candidate
+        await page.locator(".candidate-card").first().click();
+        await page.click('button:has-text("Confirm Selection")');
+        await page.waitForTimeout(500);
 
-        // Step 6: Set as avatar
-        await page.click("text=Set as Avatar");
-        await expect(page.locator(".current-avatar img")).toBeVisible();
-        const avatarSrc = await page.locator(".current-avatar img").getAttribute("src");
-        expect(avatarSrc).not.toContain("placeholder");
+        // Step 9: Save character
+        await page.click('button:has-text("Save Character")');
+        await page.waitForURL((url) => url.pathname.startsWith('/characters/') && !url.pathname.includes('/create'));
+        await page.waitForSelector("text=Test Hero", { timeout: 10000 });
+        await expect(page.locator("h1")).toContainText("Test Hero");
 
-        // Step 7: Open Gallery
+        // Step 10: Open Gallery
         await page.click("text=Gallery");
         await page.waitForURL("**/gallery");
         await expect(page.locator(".gallery-card").first()).toBeVisible();
         const gallerySrc = await page.locator(".gallery-card img").first().getAttribute("src");
         expect(gallerySrc).not.toContain("placeholder");
 
-        // Step 8: Preview modal
+        // Step 11: Preview modal
         await page.locator(".gallery-card").first().click();
         await page.waitForSelector(".modal-overlay");
         const modalSrc = await page.locator(".modal img").getAttribute("src");
         expect(modalSrc).not.toContain("placeholder");
 
-        // Step 9: Close modal and go Home
+        // Step 12: Close modal and go Home
         await page.click(".close-btn");
         await page.waitForSelector(".modal-overlay", { state: "hidden" });
         await page.click("text=← Home");
@@ -78,7 +92,7 @@ test.describe("Focused Integration Checkpoint", () => {
         const homeAvatarSrc = await page.locator(".character-card .character-avatar img").first().getAttribute("src");
         expect(homeAvatarSrc).not.toContain("placeholder");
 
-        // Step 10: Start Chat
+        // Step 13: Start Chat
         await page.locator(".character-card").first().click();
         await page.waitForURL("**/characters/**");
         await page.click("text=Start Chat");
@@ -86,13 +100,13 @@ test.describe("Focused Integration Checkpoint", () => {
         await expect(page.locator("h1")).toContainText("Chat");
         await expect(page.locator(".chat-container")).toBeVisible();
 
-        // Step 11: Send message
+        // Step 14: Send message
         await page.fill(".chat-input-bar input", "Hello, character!");
         await page.click(".chat-input-bar button");
         await page.waitForSelector(".chat-message.user .message-bubble", { timeout: 10000 });
         await expect(page.locator(".chat-message.user .message-bubble")).toContainText("Hello, character!");
 
-        // Verify no uncaught errors (ignore expected fake URI errors from fake provider)
+        // Verify no uncaught errors
         const significantErrors = errors.filter((e) => !e.includes("favicon") && !e.includes("ERR_UNKNOWN_URL_SCHEME"));
         expect(significantErrors).toHaveLength(0);
     });

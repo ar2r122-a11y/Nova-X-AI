@@ -10,8 +10,8 @@ import { SceneId } from "../../Domain/ValueObjects/SceneId";
 
 export class AdvanceSceneCommandHandler {
     constructor(
-        private readonly eventBus: IEventBus,
-        private readonly storyRepository: IStoryRepository,
+        _eventBus: IEventBus,
+        _storyRepository: IStoryRepository,
         private readonly storyDomainService: IStoryDomainService
     ) {}
 

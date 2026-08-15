@@ -26,6 +26,7 @@ import { TokenCount } from "../Domain/ValueObjects/TokenCount";
 import { MessageRole } from "../Domain/ValueObjects/MessageRole";
 import { ParticipantId } from "../Domain/ValueObjects/ParticipantId";
 import { SafetyPolicy } from "../Domain/Policies/SafetyPolicy";
+import { IConversationContextBuilder, DefaultConversationContextBuilder } from "../Domain/Services/ConversationContextBuilder";
 
 export class ConversationEngine implements IConversationEngine {
     readonly eventBus: IEventBus;
@@ -39,14 +40,16 @@ export class ConversationEngine implements IConversationEngine {
     readonly streamingPolicy: StreamingPolicy;
     readonly toolExecutionPolicy: ToolExecutionPolicy;
     readonly aiRouter: AIRouter;
+    readonly contextBuilder: IConversationContextBuilder;
     private readonly applicationService: ConversationApplicationService;
 
-    constructor(eventBus: IEventBus, aiRouter: AIRouter) {
+    constructor(eventBus: IEventBus, aiRouter: AIRouter, contextBuilder?: IConversationContextBuilder) {
         this.eventBus = eventBus;
         this.aiRouter = aiRouter;
         this.conversationRepository = new InMemoryConversationRepository();
         this.messageRepository = new InMemoryMessageRepository();
         this.sessionRepository = new InMemorySessionRepository();
+        this.contextBuilder = contextBuilder ?? new DefaultConversationContextBuilder();
         this.domainService = new ConversationDomainService(
             new ContextBuilder({ maxContextTokens: 4096 }),
             new LanguageDetector(),
@@ -114,14 +117,28 @@ export class ConversationEngine implements IConversationEngine {
             content: m.getContent()
         }));
 
+        const availableProviders =
+            this.aiRouter.getSelector().getAvailableProviders();
+        const model = availableProviders.length > 0
+            ? availableProviders[0].capabilities.supportedModels[0]
+            : "default";
+
+        const contextBlocks = await this.contextBuilder.buildContext(command.requesterId);
+        const systemPrompt = this.buildSystemPrompt(contextBlocks);
+
         const request = {
             prompt: lastUserMessage.getContent(),
-            model: "fake-model",
+            model,
             maxTokens: 1024,
             temperature: 0.7,
             context: {
                 conversationHistory: history,
-                systemPrompt: "You are a helpful assistant."
+                systemPrompt,
+                memoryContext: contextBlocks.memoryContext,
+                emotionContext: contextBlocks.emotionContext,
+                relationshipContext: contextBlocks.relationshipContext,
+                worldContext: contextBlocks.worldContext,
+                storyContext: contextBlocks.storyContext
             }
         };
 
@@ -150,6 +167,28 @@ export class ConversationEngine implements IConversationEngine {
         aggregate.postMessage(assistantMessage, authorId);
         aggregate.completeTurn(turn, assistantMessage.getId());
         await this.conversationRepository.save(aggregate);
+    }
+
+    private buildSystemPrompt(contextBlocks: {
+        readonly memoryContext?: string;
+        readonly emotionContext?: string;
+        readonly relationshipContext?: string;
+        readonly worldContext?: string;
+        readonly storyContext?: string;
+    }): string {
+        const parts = [
+            contextBlocks.memoryContext,
+            contextBlocks.emotionContext,
+            contextBlocks.relationshipContext,
+            contextBlocks.worldContext,
+            contextBlocks.storyContext
+        ].filter((block): block is string => Boolean(block));
+
+        const basePrompt = "You are a helpful assistant.";
+        if (parts.length > 0) {
+            return `${parts.join("\n\n")}\n\n${basePrompt}`;
+        }
+        return basePrompt;
     }
 
     async interrupt(command: {

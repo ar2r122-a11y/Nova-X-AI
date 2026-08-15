@@ -30,12 +30,8 @@ import { ProjectionWorker } from "../Infrastructure/Workers/ProjectionWorker";
 import { WorkerLifecycleManager } from "../Infrastructure/Workers/WorkerLifecycleManager";
 import { StoryProgressionSaga } from "../Domain/Sagas/StoryProgressionSaga";
 import { CrossEngineEventPublisher } from "../Infrastructure/Integration/CrossEngineEventPublisher";
-import { StoryConfiguration, DEFAULT_STORY_CONFIGURATION } from "../Infrastructure/Configuration/StoryConfiguration";
 import { StoryHealthChecks } from "../Infrastructure/Health/StoryHealthChecks";
 import { IStoryEngine } from "../Contracts/IStoryEngine";
-import { IStoryEngineOpenApi } from "../Contracts/IStoryEngineOpenApi";
-import { IPluginExtensionBoundary } from "../Contracts/IPluginExtensionBoundary";
-import { ICrossEngineEventPublisher } from "../Contracts/ICrossEngineEventPublisher";
 
 const STORY_ENGINE = Symbol("StoryEngine");
 
@@ -60,33 +56,33 @@ export class StoryEngineModule implements ICoreModule {
         registry.registerQuestRepository("default", engine.questRepository);
         registry.registerEndingRegistryRepository("default", engine.endingRegistryRepository);
 
-        const resolver = new StoryRepositoryResolver(registry);
-        const cacheManager = new StoryCacheManager(storageEngine.getCacheProvider());
+        new StoryRepositoryResolver(registry);
+        new StoryCacheManager(storageEngine.getCacheProvider());
         const projectionEngine = new ProjectionEngine(storageEngine.getProjectionStore());
-        const projectionReadRepository = new StoryProjectionReadRepository(storageEngine.getProjectionStore());
+        new StoryProjectionReadRepository(storageEngine.getProjectionStore());
         const snapshotManager = new SnapshotManager(
             new SnapshotRepository(storageEngine.getSnapshotStore())
         );
 
         const securityBoundary = new StorySecurityBoundary(eventBus);
         const acl = new StoryEngineAclTranslator();
-        const metrics = new StoryMetrics(eventBus);
-        const tracing = new StoryTracing();
-        const recoveryManager = new StoryRecoveryManager(
+        new StoryMetrics(eventBus);
+        new StoryTracing();
+        new StoryRecoveryManager(
             engine.eventStoreRepository,
             engine.storyRepository,
             snapshotManager
         );
-        const pluginBoundary = new PluginExtensionBoundary(acl);
-        const eventUpcaster = new EventUpcaster();
-        const schemaMigration = new SchemaMigration();
-        const openHost = new StoryOpenHostService(engine, securityBoundary, acl, eventBus);
+        new PluginExtensionBoundary(acl);
+        new EventUpcaster();
+        new SchemaMigration();
+        new StoryOpenHostService(engine, securityBoundary, acl, eventBus);
 
         const runtime = new StoryRuntime(eventBus, engine.storyRepository);
         await runtime.initialize();
 
-        const commandValidationPipeline = new CommandValidationPipeline(securityBoundary, eventBus);
-        const sceneExecutionPipeline = new SceneExecutionPipeline(
+        new CommandValidationPipeline(securityBoundary, eventBus);
+        new SceneExecutionPipeline(
             engine.storyRepository,
             engine.eventStoreRepository,
             engine.branchingService,
@@ -116,11 +112,9 @@ export class StoryEngineModule implements ICoreModule {
         const saga = new StoryProgressionSaga(eventBus, engine.storyRepository);
         await saga.initialize("default");
 
-        const crossEnginePublisher = new CrossEngineEventPublisher(eventBus);
+        new CrossEngineEventPublisher(eventBus);
 
-        const configuration: StoryConfiguration = { ...DEFAULT_STORY_CONFIGURATION };
-
-        const healthChecks = new StoryHealthChecks(
+        new StoryHealthChecks(
             eventBus,
             engine.storyRepository,
             engine.eventStoreRepository,

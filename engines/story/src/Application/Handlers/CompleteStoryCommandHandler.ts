@@ -10,8 +10,8 @@ import { EndingId } from "../../Domain/ValueObjects/EndingId";
 
 export class CompleteStoryCommandHandler {
     constructor(
-        private readonly eventBus: IEventBus,
-        private readonly storyRepository: IStoryRepository,
+        _eventBus: IEventBus,
+        _storyRepository: IStoryRepository,
         private readonly storyDomainService: IStoryDomainService
     ) {}
 

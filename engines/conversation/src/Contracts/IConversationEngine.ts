@@ -3,6 +3,7 @@ import type { IConversationRepository } from "../Domain/Repositories/IConversati
 import type { IMessageRepository } from "../Domain/Repositories/IMessageRepository";
 import type { ISessionRepository } from "../Domain/Repositories/ISessionRepository";
 import type { IConversationDomainService } from "../Domain/Services/ConversationDomainService";
+import type { IConversationContextBuilder } from "../Domain/Services/ConversationContextBuilder";
 import type { ConversationQuotaPolicy } from "../Domain/Policies/ConversationQuotaPolicy";
 import type { RateLimitPolicy } from "../Domain/Policies/RateLimitPolicy";
 import type { ContextWindowPolicy } from "../Domain/Policies/ContextWindowPolicy";
@@ -26,6 +27,7 @@ export interface IConversationEngine {
     readonly streamingPolicy: StreamingPolicy;
     readonly toolExecutionPolicy: ToolExecutionPolicy;
     readonly aiRouter: AIRouter;
+    readonly contextBuilder: IConversationContextBuilder;
 
     startSession(command: {
         conversationId: string;

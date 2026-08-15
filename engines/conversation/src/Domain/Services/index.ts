@@ -10,6 +10,7 @@ export type { ITurnEvaluator } from "./TurnEvaluator";
 export type { ILanguageDetector } from "./LanguageDetector";
 export type { ITokenBudgetAllocator } from "./TokenBudgetAllocator";
 export type { IConversationSummarizer } from "./ConversationSummarizer";
+export type { IConversationContextBuilder } from "./ConversationContextBuilder";
 
 export { ConversationDomainService } from "./ConversationDomainService";
 export { ContextBuilder } from "./ContextBuilder";
@@ -17,3 +18,4 @@ export { TurnEvaluator } from "./TurnEvaluator";
 export { LanguageDetector } from "./LanguageDetector";
 export { TokenBudgetAllocator } from "./TokenBudgetAllocator";
 export { ConversationSummarizer } from "./ConversationSummarizer";
+export { DefaultConversationContextBuilder } from "./ConversationContextBuilder";

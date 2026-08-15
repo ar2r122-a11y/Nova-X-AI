@@ -9,8 +9,8 @@ import { StoryId } from "../../Domain/ValueObjects/StoryId";
 
 export class StartStoryCommandHandler {
     constructor(
-        private readonly eventBus: IEventBus,
-        private readonly storyRepository: IStoryRepository,
+        _eventBus: IEventBus,
+        _storyRepository: IStoryRepository,
         private readonly storyDomainService: IStoryDomainService
     ) {}
 

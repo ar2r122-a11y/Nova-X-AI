@@ -8,7 +8,6 @@ import { TimelineDto } from "./Dtos/TimelineDto";
 import { StoryStateDto } from "./Dtos/StoryStateDto";
 import { CommandResultDto } from "./Dtos/CommandResultDto";
 import { QueryResultDto } from "./Dtos/QueryResultDto";
-import { StoryAggregateDto } from "../../Application/DTO/StoryAggregateDto";
 import { StoryId } from "../../Domain/ValueObjects/StoryId";
 
 export class StoryOpenHostService implements IStoryEngineOpenApi {

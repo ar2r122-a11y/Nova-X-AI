@@ -35,6 +35,16 @@ export interface PromptContext {
 
     readonly variables?: Record<string, unknown>;
 
+    readonly memoryContext?: string;
+
+    readonly emotionContext?: string;
+
+    readonly relationshipContext?: string;
+
+    readonly worldContext?: string;
+
+    readonly storyContext?: string;
+
 }
 
 export interface ConversationMessage {

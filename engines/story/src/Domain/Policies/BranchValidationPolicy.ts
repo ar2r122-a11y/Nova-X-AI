@@ -1,6 +1,5 @@
 import { Branch } from "../Entities/Branch";
 import { QuestStatus } from "../ValueObjects/QuestStatus";
-import { NarrativePriorityRef } from "../ValueObjects/NarrativePriority";
 
 export class BranchValidationPolicy {
     static validateBranch(

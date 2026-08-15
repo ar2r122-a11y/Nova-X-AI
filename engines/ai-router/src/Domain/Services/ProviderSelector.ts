@@ -57,7 +57,8 @@ export class ProviderSelector {
     private roundRobinIndex = 0;
 
     constructor(
-        private readonly providers: Map<string, IAiProvider>
+        private readonly providers: Map<string, IAiProvider>,
+        private readonly getPriority: (provider: IAiProvider) => number = () => 0
     ) {}
 
     public select(
@@ -306,7 +307,7 @@ export class ProviderSelector {
 
                 health: p.getHealth().status,
 
-                priority: 0,
+                priority: this.getPriority(p),
 
                 capabilities: p.capabilities
 
@@ -348,7 +349,17 @@ export class ProviderSelector {
 
                 const bp = bh.isDegraded() ? 1 : 0;
 
-                return ap - bp;
+                if (ap !== bp) {
+
+                    return ap - bp;
+
+                }
+
+                const priorityA = this.getPriority(a);
+
+                const priorityB = this.getPriority(b);
+
+                return priorityA - priorityB;
 
             }
         );

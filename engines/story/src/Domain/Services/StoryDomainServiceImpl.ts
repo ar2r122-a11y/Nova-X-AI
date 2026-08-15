@@ -8,16 +8,14 @@ import { IStoryRepository } from "../Repositories/IStoryRepository";
 import { IQuestRepository } from "../Repositories/IQuestRepository";
 import { IEndingRegistryRepository } from "../Repositories/IEndingRegistryRepository";
 import { IStoryEventStoreRepository } from "../Repositories/IStoryEventStoreRepository";
-import { StoryAuthorizationPolicy } from "../Policies/StoryAuthorizationPolicy";
-import { StoryStartedEvent, SceneAdvancedEvent, ChoiceSelectedEvent, StoryCompletedEvent, StoryFailedEvent } from "../Events";
 import { IStoryDomainService } from "./IStoryDomainService";
 
 export class StoryDomainServiceImpl implements IStoryDomainService {
     constructor(
         private readonly eventBus: IEventBus,
         private readonly storyRepository: IStoryRepository,
-        private readonly questRepository: IQuestRepository,
-        private readonly endingRegistryRepository: IEndingRegistryRepository,
+        _questRepository: IQuestRepository,
+        _endingRegistryRepository: IEndingRegistryRepository,
         private readonly eventStoreRepository: IStoryEventStoreRepository
     ) {}
 

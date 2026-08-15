@@ -482,6 +482,18 @@ export class OpenRouterAiProvider implements IAiProvider {
 
         const messages: OpenRouterMessage[] = [];
 
+        const contextBlocks = [
+            request.context?.memoryContext,
+            request.context?.emotionContext,
+            request.context?.relationshipContext,
+            request.context?.worldContext,
+            request.context?.storyContext
+        ].filter((block): block is string => Boolean(block));
+
+        if (contextBlocks.length > 0) {
+            messages.push({ role: "system", content: contextBlocks.join("\n\n") });
+        }
+
         const systemPrompt = request.context?.systemPrompt;
 
         if (systemPrompt) {

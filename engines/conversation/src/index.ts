@@ -45,8 +45,11 @@ export type {
     ITurnEvaluator,
     ILanguageDetector,
     ITokenBudgetAllocator,
-    IConversationSummarizer
+    IConversationSummarizer,
+    IConversationContextBuilder
 } from "./Domain/Services";
+
+export { DefaultConversationContextBuilder } from "./Domain/Services/ConversationContextBuilder";
 
 export { RateLimitPolicy } from "./Domain/Policies/RateLimitPolicy";
 export { SafetyPolicy } from "./Domain/Policies/SafetyPolicy";

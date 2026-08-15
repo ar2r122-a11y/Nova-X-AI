@@ -1,7 +1,6 @@
 import type { IEventBus } from "@nova-x-ai/core";
 import type { IStoryEventStoreRepository } from "../../Domain/Repositories/IStoryEventStoreRepository";
 import type { IStoryRepository } from "../../Domain/Repositories/IStoryRepository";
-import type { IStoryWorker } from "./IStoryWorker";
 import { BaseStoryWorker } from "./BaseStoryWorker";
 import { WorkerHealthState } from "../../Domain/ValueObjects/WorkerHealthState";
 
@@ -9,7 +8,7 @@ export class ReplayWorker extends BaseStoryWorker {
     constructor(
         eventBus: IEventBus,
         private readonly eventStoreRepository: IStoryEventStoreRepository,
-        private readonly storyRepository: IStoryRepository
+        _storyRepository: IStoryRepository
     ) {
         super(eventBus, "ReplayWorker");
     }

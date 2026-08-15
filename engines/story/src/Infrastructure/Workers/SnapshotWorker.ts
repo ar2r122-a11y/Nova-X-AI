@@ -1,6 +1,5 @@
 import type { IEventBus } from "@nova-x-ai/core";
 import type { IStorySnapshotManager } from "../../Domain/Services/IStorySnapshotManager";
-import type { IStoryWorker } from "./IStoryWorker";
 import { BaseStoryWorker } from "./BaseStoryWorker";
 import { WorkerHealthState } from "../../Domain/ValueObjects/WorkerHealthState";
 
@@ -10,7 +9,7 @@ export class SnapshotWorker extends BaseStoryWorker {
 
     constructor(
         eventBus: IEventBus,
-        private readonly snapshotManager: IStorySnapshotManager
+        _snapshotManager: IStorySnapshotManager
     ) {
         super(eventBus, "SnapshotWorker");
     }

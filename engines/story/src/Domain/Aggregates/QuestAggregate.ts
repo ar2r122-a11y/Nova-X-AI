@@ -151,7 +151,7 @@ export class QuestAggregate {
         this.props.updatedAt = Date.now();
     }
 
-    failObjective(objectiveId: ObjectiveId, reason: string): void {
+    failObjective(objectiveId: ObjectiveId, _reason: string): void {
         const objective = this.props.objectives.find((o) => o.getObjectiveId().equals(objectiveId));
         if (!objective) {
             throw new Error(`Objective not found: ${objectiveId.getValue()}`);
@@ -186,7 +186,7 @@ export class QuestAggregate {
         ));
     }
 
-    fail(reason: string): void {
+    fail(_reason: string): void {
         if (this.props.status.getValue() !== "active") {
             throw new Error(`Quest can only be failed from active. Current: ${this.props.status.getValue()}`);
         }

@@ -1,6 +1,4 @@
 import { Branch } from "../Entities/Branch";
-import { BranchCondition } from "../ValueObjects/BranchCondition";
-import { QuestStatus } from "../ValueObjects/QuestStatus";
 
 export class BranchConditionIsSatisfiedSpecification {
     static isSatisfiedBy(branch: Branch, context: Record<string, unknown>): boolean {

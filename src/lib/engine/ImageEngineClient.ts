@@ -1,7 +1,7 @@
 import type { IEventBus } from "@nova-x-ai/core";
 import { ImageEngineImpl, FakeImageProviderAdapter } from "@nova-x-ai/image";
 import { ImagePromptOrchestrator } from "@nova-x-ai/image/Domain/Services/ImageEngineServices";
-import { createBrowserStorageEngine } from "./BrowserStorageEngine";
+import { getSharedStorageEngine } from "./SharedInfrastructure";
 import { ImageRepositoryAdapter, RenderJobRepositoryAdapter, ImageAssetRepositoryAdapter, ImageCandidateRepositoryAdapter } from "./ImageRepositoryAdapters";
 
 export class ImageEngineClient {
@@ -22,7 +22,7 @@ export class ImageEngineClient {
     }
 
     static async createEngine(): Promise<ImageEngineImpl> {
-        const storageEngine = createBrowserStorageEngine();
+        const storageEngine = getSharedStorageEngine();
         const eventBus = storageEngine.eventBus as IEventBus;
 
         const imageRepo = storageEngine.getRepository<any>("images");

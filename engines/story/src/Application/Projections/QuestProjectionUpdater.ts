@@ -1,6 +1,5 @@
 import { QuestUpdatedEvent } from "../../Domain/Events/QuestUpdatedEvent";
 import { StoryReadModelImpl } from "./StoryReadModelImpl";
-import { StoryAggregateDto } from "../DTO/StoryAggregateDto";
 import { QuestDto } from "../DTO/QuestDto";
 
 export class QuestProjectionUpdater {

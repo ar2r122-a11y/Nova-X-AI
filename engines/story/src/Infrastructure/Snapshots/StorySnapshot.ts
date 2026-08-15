@@ -1,5 +1,3 @@
-import { ISnapshotStore, StorageSnapshot } from "@nova-x-ai/storage";
-
 export interface StorySnapshotData {
     readonly storyId: string;
     readonly aggregateType: string;

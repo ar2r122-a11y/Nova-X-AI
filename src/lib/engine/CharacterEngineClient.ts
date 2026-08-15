@@ -1,6 +1,6 @@
 import type { IEventBus } from "@nova-x-ai/core";
 import { CharacterEngine, CharacterRepositoryImpl, CharacterContextBuilder } from "@nova-x-ai/character";
-import { createBrowserStorageEngine } from "./BrowserStorageEngine";
+import { getSharedStorageEngine } from "./SharedInfrastructure";
 
 export class CharacterEngineClient {
     private static instance: CharacterEngine | null = null;
@@ -20,7 +20,7 @@ export class CharacterEngineClient {
     }
 
     private static async createEngine(): Promise<CharacterEngine> {
-        const storageEngine = createBrowserStorageEngine();
+        const storageEngine = getSharedStorageEngine();
         const eventBus = storageEngine.eventBus as IEventBus;
 
         const repository = new CharacterRepositoryImpl(storageEngine);

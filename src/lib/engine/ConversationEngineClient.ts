@@ -1,28 +1,8 @@
 import type { IEventBus } from "@nova-x-ai/core";
 import { ConversationEngine } from "@nova-x-ai/conversation";
 import { AIRouter, FakeAiProvider, OpenRouterAiProvider } from "@nova-x-ai/ai-router";
-
-class SimpleEventBus implements IEventBus {
-    private handlers: Map<string, Set<any>> = new Map();
-
-    async publish(event: any): Promise<void> {
-        const handlers = this.handlers.get((event as any).eventType);
-        if (handlers) {
-            for (const handler of handlers) {
-                await handler.handle(event);
-            }
-        }
-    }
-
-    subscribe(eventType: string, handler: any): void {
-        const handlers = this.handlers.get(eventType);
-        if (handlers) {
-            handlers.add(handler);
-        } else {
-            this.handlers.set(eventType, new Set([handler]));
-        }
-    }
-}
+import { getSharedStorageEngine } from "./SharedInfrastructure";
+import { ConversationContextProvider } from "./ConversationContextProvider";
 
 export class ConversationEngineClient {
     private static instance: ConversationEngine | null = null;
@@ -42,7 +22,8 @@ export class ConversationEngineClient {
     }
 
     private static async createEngine(): Promise<ConversationEngine> {
-        const eventBus = new SimpleEventBus();
+        const storageEngine = getSharedStorageEngine();
+        const eventBus = storageEngine.eventBus as IEventBus;
         const aiRouter = new AIRouter();
         const openRouterProvider = new OpenRouterAiProvider({
             serverEndpoint: "/api/ai/chat"
@@ -50,7 +31,8 @@ export class ConversationEngineClient {
         aiRouter.registerProvider(openRouterProvider, 0, true);
         const fakeProvider = new FakeAiProvider();
         aiRouter.registerProvider(fakeProvider, 1, true);
-        return new ConversationEngine(eventBus, aiRouter);
+        const contextProvider = new ConversationContextProvider();
+        return new ConversationEngine(eventBus, aiRouter, contextProvider);
     }
 
     static async reset(): Promise<void> {

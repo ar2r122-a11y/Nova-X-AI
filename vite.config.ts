@@ -63,7 +63,16 @@ export default defineConfig({
             "@nova-x-ai/image": path.resolve(__dirname, "engines/image/src"),
             "@nova-x-ai/conversation": path.resolve(__dirname, "engines/conversation/src"),
             "@nova-x-ai/character": path.resolve(__dirname, "engines/character/src"),
-            "@nova-x-ai/analytics": path.resolve(__dirname, "engines/analytics/src")
+            "@nova-x-ai/analytics": path.resolve(__dirname, "engines/analytics/src"),
+            "@nova-x-ai/diagnostics": path.resolve(__dirname, "engines/diagnostics/src"),
+            "@nova-x-ai/memory": path.resolve(__dirname, "engines/memory/src"),
+            "@nova-x-ai/emotion": path.resolve(__dirname, "engines/emotion/src"),
+            "@nova-x-ai/relationship": path.resolve(__dirname, "engines/relationship/src"),
+            "@nova-x-ai/world": path.resolve(__dirname, "engines/world/src"),
+            "@nova-x-ai/story": path.resolve(__dirname, "engines/story/src"),
+            "@nova-x-ai/voice": path.resolve(__dirname, "engines/voice/src"),
+            "@nova-x-ai/plugin": path.resolve(__dirname, "engines/plugin/src"),
+            "@nova-x-ai/deployment-operations": path.resolve(__dirname, "engines/deployment-operations/src")
         }
     }
 });

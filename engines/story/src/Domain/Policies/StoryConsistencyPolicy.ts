@@ -1,7 +1,5 @@
 import { StoryAggregate } from "../Aggregates/StoryAggregate";
 import { Scene } from "../Entities/Scene";
-import { Chapter } from "../Entities/Chapter";
-import { Quest } from "../Entities/Quest";
 
 export class StoryConsistencyPolicy {
     static validateStoryConsistency(story: StoryAggregate): string[] {
@@ -58,8 +56,6 @@ export class StoryConsistencyPolicy {
 
     static hasInvalidSceneOrder(story: StoryAggregate): boolean {
         const scenes = story.getScenes();
-        const chapters = story.getChapters();
-        const chapterMap = new Map(chapters.map((c) => [c.getId().getValue(), c]));
 
         const scenesByChapter = new Map<string, Scene[]>();
         for (const scene of scenes) {
@@ -70,7 +66,7 @@ export class StoryConsistencyPolicy {
             scenesByChapter.get(chapterId)!.push(scene);
         }
 
-        for (const [chapterId, chapterScenes] of scenesByChapter.entries()) {
+        for (const [_chapterId, chapterScenes] of scenesByChapter.entries()) {
             chapterScenes.sort((a, b) => a.getOrder() - b.getOrder());
             const seenOrders = new Set<number>();
             for (const scene of chapterScenes) {
