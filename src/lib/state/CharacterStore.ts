@@ -109,13 +109,62 @@ export const useAppStore = create<AppState>()(
             error: null,
 
             setCharacters: (characters) => set({ characters }),
-            mergeCharacters: (characters) => set((state) => {
-                const existingIds = new Set(state.characters.map((c) => c.id));
-                const merged = [...state.characters, ...characters.filter((c) => !existingIds.has(c.id))];
-                return { characters: merged };
+            mergeCharacters: (incoming) => set((state) => {
+                const byId = new Map(state.characters.map((c) => [c.id, c]));
+                const byName = new Map(state.characters.map((c) => [c.name.toLowerCase(), c]));
+                const result: Character[] = [];
+                const idRemap: Record<string, string> = {};
+
+                for (const incomingChar of incoming) {
+                    const existing = byId.get(incomingChar.id);
+                    if (existing) {
+                        result.push(incomingChar);
+                        byId.delete(incomingChar.id);
+                        byName.delete(existing.name.toLowerCase());
+                    } else {
+                        const existingByName = byName.get(incomingChar.name.toLowerCase());
+                        if (existingByName) {
+                            idRemap[existingByName.id] = incomingChar.id;
+                            result.push(incomingChar);
+                            byId.delete(existingByName.id);
+                            byName.delete(incomingChar.name.toLowerCase());
+                        } else {
+                            result.push(incomingChar);
+                        }
+                    }
+                }
+
+                for (const [id, c] of byId) {
+                    if (!Object.values(idRemap).includes(id)) {
+                        result.push(c);
+                    }
+                }
+
+                const favoriteCharacterIds = state.favoriteCharacterIds.map((fid) =>
+                    idRemap[fid] || fid
+                );
+                const recentCharacterIds = state.recentCharacterIds.map((rid) =>
+                    idRemap[rid] || rid
+                );
+                const lastVisitedAt = { ...state.lastVisitedAt };
+                for (const [oldId, newId] of Object.entries(idRemap)) {
+                    if (lastVisitedAt[oldId] !== undefined) {
+                        lastVisitedAt[newId] = lastVisitedAt[oldId];
+                        delete lastVisitedAt[oldId];
+                    }
+                }
+
+                return {
+                    characters: result,
+                    favoriteCharacterIds,
+                    recentCharacterIds,
+                    lastVisitedAt
+                };
             }),
             addCharacter: (character) => set((state) => ({
-                characters: [...state.characters, character]
+                characters: state.characters.some((c) => c.id === character.id)
+                    ? state.characters.map((c) => (c.id === character.id ? character : c))
+                    : [...state.characters, character]
             })),
             updateCharacter: (id, updates) => set((state) => ({
                 characters: state.characters.map((c) => (c.id === id ? { ...c, ...updates } : c))

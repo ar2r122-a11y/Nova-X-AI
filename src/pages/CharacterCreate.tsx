@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAppStore, Character } from "../lib/state/CharacterStore";
 import { CharacterEngineClient } from "../lib/engine/CharacterEngineClient";
@@ -98,14 +98,6 @@ export default function CharacterCreate() {
         }));
     };
 
-    const handleNext = () => {
-        if (step < 5) setStep((s) => (s + 1) as Step);
-    };
-
-    const handleBack = () => {
-        if (step > 1) setStep((s) => (s - 1) as Step);
-    };
-
     const buildPrompt = () => {
         const parts: string[] = [];
         if (appearance.visualDescription) parts.push(appearance.visualDescription);
@@ -121,12 +113,28 @@ export default function CharacterCreate() {
         return parts.join(", ");
     };
 
+    const [generationPrompt, setGenerationPrompt] = useState(() => buildPrompt());
+
+    const handleNext = () => {
+        if (step < 5) setStep((s) => (s + 1) as Step);
+    };
+
+    const handleBack = () => {
+        if (step > 1) setStep((s) => (s - 1) as Step);
+    };
+
+    useEffect(() => {
+        if (step === 5) {
+            setGenerationPrompt(buildPrompt());
+        }
+    }, [step]);
+
     const handleGenerateImages = async () => {
         setGenerating(true);
         setError(null);
         try {
             const engine = await ImageEngineClient.getEngine();
-            const prompt = buildPrompt();
+            const prompt = generationPrompt || buildPrompt();
             const orchestrator = new ImagePromptOrchestrator();
             const compiled = orchestrator.compilePrompt(prompt);
 
@@ -223,7 +231,9 @@ export default function CharacterCreate() {
                 claims: { roles: ["user"], permissions: ["create"] }
             });
 
-            const characterId = `char-${Date.now()}`;
+            const aggregates = await charEngine.getActiveCharacters();
+            const createdAggregate = aggregates.find((a) => a.getName() === identity.name.trim());
+            const characterId = createdAggregate?.getId().getValue() || `char-${Date.now()}`;
             const newCharacter: Character = {
                 id: characterId,
                 name: identity.name.trim(),
@@ -283,7 +293,7 @@ export default function CharacterCreate() {
                 const imageRecord = {
                     id: `img-${Date.now()}`,
                     characterId,
-                    prompt: buildPrompt(),
+                    prompt: generationPrompt || buildPrompt(),
                     candidates: generatedCandidates.map((c: any) => ({
                         id: c.id,
                         uri: c.uri,
@@ -333,78 +343,75 @@ export default function CharacterCreate() {
                 </div>
             </nav>
 
-            <div className="create-layout">
-                <div className="create-image-panel">
-                    <div className="image-preview">
-                        {selectedImageUri ? (
-                            <img
-                                src={selectedImageUri}
-                                alt="Selected avatar"
-                                className="image-preview-img"
-                            />
-                        ) : generating ? (
-                            <div className="image-loading">
-                                <div className="spinner"></div>
-                                <p>Generating your character...</p>
-                            </div>
-                        ) : (
-                            <div className="image-empty">
-                                <div className="image-empty-icon">✦</div>
-                                <h3>No Image Yet</h3>
-                                <p>Generate or select an image to bring your character to life.</p>
-                            </div>
-                        )}
+            <div className={`create-layout ${step < 5 ? "create-layout--full" : ""}`}>
+                {step === 5 && (
+                    <div className="create-image-panel">
+                        <div className="image-preview">
+                            {selectedImageUri ? (
+                                <img
+                                    src={selectedImageUri}
+                                    alt="Selected avatar"
+                                    className="image-preview-img"
+                                />
+                            ) : generating ? (
+                                <div className="image-loading">
+                                    <div className="spinner"></div>
+                                    <p>Generating your character...</p>
+                                </div>
+                            ) : (
+                                <div className="image-empty">
+                                    <div className="image-empty-icon">✦</div>
+                                    <h3>No Image Yet</h3>
+                                    <p>Generate or select an image to bring your character to life.</p>
+                                </div>
+                            )}
 
-                        {selectedImageUri && (
-                            <div className="image-preview-overlay">
-                                <button
-                                    type="button"
-                                    className="secondary small"
-                                    onClick={() => setSelectedAvatarId(null)}
-                                >
-                                    Change
-                                </button>
-                            </div>
-                        )}
-                    </div>
-
-                    {generatedCandidates.length > 0 && (
-                        <div className="candidate-strip">
-                            {generatedCandidates.map((candidate) => (
-                                <button
-                                    key={candidate.id}
-                                    type="button"
-                                    className={`candidate-thumb ${selectedCandidateId === candidate.id ? "selected" : ""}`}
-                                    onClick={() => {
-                                        setSelectedCandidateId(candidate.id);
-                                        setSelectedAvatarId(candidate.id);
-                                    }}
-                                >
-                                    <img src={candidate.uri} alt="" />
-                                    {selectedCandidateId === candidate.id && <span className="avatar-badge">Primary</span>}
-                                </button>
-                            ))}
+                            {selectedImageUri && (
+                                <div className="image-preview-overlay">
+                                    <button
+                                        type="button"
+                                        className="secondary small"
+                                        onClick={() => setSelectedAvatarId(null)}
+                                    >
+                                        Change
+                                    </button>
+                                </div>
+                            )}
                         </div>
-                    )}
 
-                    <div className="image-panel-actions">
-                        {step < 5 && (
-                            <button className="primary full-width" onClick={() => setStep(5)}>
-                                Generate Image →
-                            </button>
+                        {generatedCandidates.length > 0 && (
+                            <div className="candidate-strip">
+                                {generatedCandidates.map((candidate) => (
+                                    <button
+                                        key={candidate.id}
+                                        type="button"
+                                        className={`candidate-thumb ${selectedCandidateId === candidate.id ? "selected" : ""}`}
+                                        onClick={() => {
+                                            setSelectedCandidateId(candidate.id);
+                                            setSelectedAvatarId(candidate.id);
+                                        }}
+                                    >
+                                        <img src={candidate.uri} alt="" />
+                                        {selectedCandidateId === candidate.id && <span className="avatar-badge">Primary</span>}
+                                    </button>
+                                ))}
+                            </div>
                         )}
-                        {step === 5 && !generatedCandidates.length && !generating && (
-                            <button className="primary full-width" onClick={handleGenerateImages}>
-                                Generate Avatars
-                            </button>
-                        )}
-                        {step === 5 && generatedCandidates.length > 0 && selectedCandidateId && (
-                            <button className="primary full-width" onClick={handleSaveCharacter} disabled={saving}>
-                                {saving ? "Creating..." : "Create Character"}
-                            </button>
-                        )}
+
+                        <div className="image-panel-actions">
+                            {step === 5 && !generatedCandidates.length && !generating && (
+                                <button className="primary full-width" onClick={handleGenerateImages}>
+                                    Generate Avatars
+                                </button>
+                            )}
+                            {step === 5 && generatedCandidates.length > 0 && selectedCandidateId && (
+                                <button className="primary full-width" onClick={handleSaveCharacter} disabled={saving}>
+                                    {saving ? "Creating..." : "Create Character"}
+                                </button>
+                            )}
+                        </div>
                     </div>
-                </div>
+                )}
 
                 <div className="create-form-panel">
                     <div className="stepper">
@@ -775,8 +782,14 @@ export default function CharacterCreate() {
 
                                     {!generatedCandidates.length && !generating && (
                                         <div className="generation-prompt-preview">
-                                            <h4>Prompt Preview</h4>
-                                            <p>{buildPrompt()}</p>
+                                            <h4>Visual Prompt</h4>
+                                            <div className="form-group">
+                                                <textarea
+                                                    value={generationPrompt}
+                                                    onChange={(e) => setGenerationPrompt(e.target.value)}
+                                                    rows={4}
+                                                />
+                                            </div>
                                         </div>
                                     )}
 

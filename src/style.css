@@ -2834,20 +2834,20 @@ button.small {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    margin-bottom: 24px;
+    gap: 6px;
+    margin-bottom: 16px;
 }
 
 .step {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 8px 16px;
+    gap: 6px;
+    padding: 6px 12px;
     border-radius: 100px;
     background: rgba(255, 255, 255, .04);
     border: 1px solid var(--border-subtle);
     color: var(--text-muted);
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 500;
     transition: all .2s;
 }
@@ -2865,14 +2865,14 @@ button.small {
 }
 
 .step-circle {
-    width: 24px;
-    height: 24px;
+    width: 22px;
+    height: 22px;
     border-radius: 50%;
     background: rgba(255, 255, 255, .1);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 700;
     flex-shrink: 0;
 }
@@ -2907,23 +2907,23 @@ button.small {
 
 .step-subtitle {
     color: var(--text-secondary);
-    font-size: 15px;
-    margin-bottom: 24px;
-    margin-top: 8px;
+    font-size: 14px;
+    margin-bottom: 16px;
+    margin-top: 4px;
 }
 
 .form-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 16px;
-    margin-bottom: 16px;
+    gap: 12px;
+    margin-bottom: 12px;
 }
 
 .form-group {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    margin-bottom: 16px;
+    gap: 6px;
+    margin-bottom: 12px;
 }
 
 .form-group label {
@@ -2934,8 +2934,8 @@ button.small {
 
 .form-group input,
 .form-group textarea {
-    padding: 12px 16px;
-    border-radius: 12px;
+    padding: 10px 14px;
+    border-radius: 10px;
     border: 1px solid var(--border-medium);
     background: rgba(255, 255, 255, .06);
     color: var(--text-primary);
@@ -2959,8 +2959,8 @@ button.small {
 
 .swatch-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-    gap: 10px;
+    grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+    gap: 8px;
 }
 
 .swatch {
@@ -2991,17 +2991,17 @@ button.small {
 
 .card-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 12px;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 8px;
 }
 
 .select-card {
-    padding: 12px 16px;
-    border-radius: 12px;
+    padding: 10px 14px;
+    border-radius: 10px;
     background: rgba(255, 255, 255, .04);
     border: 1px solid var(--border-subtle);
     color: var(--text-secondary);
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 500;
     cursor: pointer;
     transition: all .2s;
@@ -3022,8 +3022,8 @@ button.small {
 
 .trait-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-    gap: 10px;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 8px;
 }
 
 .trait-item {
@@ -3062,15 +3062,15 @@ button.small {
 .review-section {
     background: var(--bg-card);
     border: 1px solid var(--border-subtle);
-    border-radius: 16px;
-    padding: 20px;
-    margin-bottom: 16px;
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 12px;
 }
 
 .review-section h3 {
-    font-size: 16px;
+    font-size: 15px;
     font-weight: 700;
-    margin-bottom: 16px;
+    margin-bottom: 12px;
     color: var(--text-primary);
 }
 
@@ -3093,15 +3093,15 @@ button.small {
 }
 
 .generation-prompt-preview {
-    padding: 20px;
-    border-radius: 16px;
+    padding: 16px;
+    border-radius: 14px;
     background: rgba(255, 255, 255, .04);
     border: 1px solid var(--border-subtle);
-    margin-bottom: 24px;
+    margin-bottom: 16px;
 }
 
 .generation-prompt-preview h4 {
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 700;
     color: var(--text-muted);
     text-transform: uppercase;
@@ -3113,6 +3113,31 @@ button.small {
     font-size: 14px;
     color: var(--text-secondary);
     line-height: 1.6;
+}
+
+.prompt-editor {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--border-medium);
+    background: rgba(255, 255, 255, .06);
+    color: var(--text-primary);
+    font-size: 14px;
+    outline: none;
+    transition: all .2s;
+    font-family: inherit;
+    resize: vertical;
+    min-height: 80px;
+}
+
+.prompt-editor:focus {
+    border-color: var(--accent-start);
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, .12);
+    background: rgba(255, 255, 255, .08);
+}
+
+.prompt-editor::placeholder {
+    color: var(--text-muted);
 }
 
 .generate-btn {
@@ -3362,9 +3387,15 @@ button.small {
 .create-layout {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 32px;
+    gap: 24px;
     align-items: start;
     flex: 1;
+}
+
+.create-layout--full {
+    grid-template-columns: 1fr;
+    max-width: 800px;
+    margin: 0 auto;
 }
 
 .create-image-panel {
@@ -3550,7 +3581,7 @@ button.small {
 .create-form-panel {
     display: flex;
     flex-direction: column;
-    gap: 24px;
+    gap: 16px;
     min-width: 0;
 }
 
