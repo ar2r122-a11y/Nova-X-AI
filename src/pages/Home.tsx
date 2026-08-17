@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAppStore, Character } from "../lib/state/CharacterStore";
 import { loadCharactersFromEngine } from "../lib/engine/CharacterDataLoader";
 import CharacterCard from "../components/features/CharacterCard";
@@ -10,7 +10,9 @@ const LOAD_TIMEOUT = 15000;
 
 export default function Home() {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const characters = useAppStore((s) => s.characters);
+    const images = useAppStore((s) => s.images);
     const favoriteCharacterIds = useAppStore((s) => s.favoriteCharacterIds);
     const recentCharacterIds = useAppStore((s) => s.recentCharacterIds);
     const lastVisitedAt = useAppStore((s) => s.lastVisitedAt);
@@ -25,7 +27,7 @@ export default function Home() {
 
     const [searchQuery, setSearchQuery] = useState("");
     const [activeCategory, setActiveCategory] = useState("All");
-    const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+    const [showFavoritesOnly, setShowFavoritesOnly] = useState(searchParams.get("favorites") === "true");
 
     useEffect(() => {
         let cancelled = false;
@@ -107,13 +109,9 @@ export default function Home() {
         return combined.slice(0, 12);
     }, [characters, favoriteCharacterIds]);
 
-    const recommended = useMemo(() => {
-        const recentIds = new Set(recentlyUsed.slice(0, 6).map((c) => c.id));
-        return characters
-            .filter((c) => !recentIds.has(c.id))
-            .sort((a, b) => b.createdAt - a.createdAt)
-            .slice(0, 12);
-    }, [characters, recentlyUsed]);
+    const recentImages = useMemo(() => {
+        return images.slice(0, 8);
+    }, [images]);
 
     const handleStartChat = (id: string) => {
         addRecentCharacter(id);
@@ -157,7 +155,7 @@ export default function Home() {
             <section className="hero-section">
                 <div className="hero-content">
                     <h1 className="hero-title">
-                        Discover <span className="hero-accent">Characters</span>
+                        Discover <span className="hero-accent">Companions</span>
                     </h1>
                     <p className="hero-subtitle">
                         Connect with unique AI companions. Find your perfect match and start a conversation.
@@ -210,56 +208,6 @@ export default function Home() {
                         <span className="stat-label">Recently Used</span>
                     </div>
                 </div>
-
-                <div className="hero-features">
-                    <button
-                        className="feature-card"
-                        onClick={() => navigate("/characters/create")}
-                        aria-label="Story discovery - create a character to begin"
-                    >
-                        <span className="feature-icon" aria-hidden="true">📖</span>
-                        <div className="feature-card-body">
-                            <h3>Story Mode</h3>
-                            <p>Narrative adventures unfold through your characters.</p>
-                        </div>
-                        <span className="feature-card-arrow" aria-hidden="true">→</span>
-                    </button>
-                    <button
-                        className="feature-card"
-                        onClick={() => navigate("/gallery")}
-                        aria-label="World discovery - browse generated art"
-                    >
-                        <span className="feature-icon" aria-hidden="true">🌍</span>
-                        <div className="feature-card-body">
-                            <h3>World Explorer</h3>
-                            <p>Browse generated artwork and character galleries.</p>
-                        </div>
-                        <span className="feature-card-arrow" aria-hidden="true">→</span>
-                    </button>
-                </div>
-            </section>
-
-            <section className="categories-section">
-                <div className="categories-scroll">
-                    {CATEGORIES.map((cat) => (
-                        <button
-                            key={cat}
-                            className={clsx("category-chip", { active: activeCategory === cat })}
-                            onClick={() => {
-                                setActiveCategory(cat);
-                                setShowFavoritesOnly(false);
-                            }}
-                        >
-                            {cat}
-                        </button>
-                    ))}
-                    <button
-                        className={clsx("category-chip", { active: showFavoritesOnly })}
-                        onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
-                    >
-                        {showFavoritesOnly ? "★ Favorites" : "☆ Show Favorites"}
-                    </button>
-                </div>
             </section>
 
             {engineError && characters.length === 0 && (
@@ -301,11 +249,42 @@ export default function Home() {
                     {recentlyUsed.length > 0 && !showFavoritesOnly && !searchQuery && activeCategory === "All" && (
                         <section className="section">
                             <div className="section-header">
-                                <h2 className="section-title">Recently Used</h2>
-                                <span className="section-count">{recentlyUsed.length} characters</span>
+                                <h2 className="section-title">Continue Conversation</h2>
+                                <span className="section-count">{recentlyUsed.length} recent</span>
                             </div>
                             <div className="character-row">
                                 {recentlyUsed.map(renderCard)}
+                            </div>
+                        </section>
+                    )}
+
+                    {recentImages.length > 0 && !showFavoritesOnly && !searchQuery && activeCategory === "All" && (
+                        <section className="section">
+                            <div className="section-header">
+                                <h2 className="section-title">Recent Images</h2>
+                                <span className="section-count">{recentImages.length} images</span>
+                            </div>
+                            <div className="recent-images-row">
+                                {recentImages.map((img) => {
+                                    const uri = img.candidates.find((c) => c.id === img.selectedCandidateId)?.uri || img.candidates[0]?.uri;
+                                    return (
+                                        <div key={img.id} className="recent-image-card" onClick={() => navigate(`/characters/${img.characterId}`)}>
+                                            {uri && <img src={uri} alt={img.prompt} loading="lazy" />}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </section>
+                    )}
+
+                    {!showFavoritesOnly && trending.length > 0 && (
+                        <section className="section">
+                            <div className="section-header">
+                                <h2 className="section-title">Discover</h2>
+                                <span className="section-count">{trending.length} characters</span>
+                            </div>
+                            <div className="character-grid">
+                                {trending.map(renderCard)}
                             </div>
                         </section>
                     )}
@@ -331,34 +310,10 @@ export default function Home() {
                         </section>
                     )}
 
-                    {!showFavoritesOnly && trending.length > 0 && (
-                        <section className="section">
-                            <div className="section-header">
-                                <h2 className="section-title">Trending</h2>
-                                <span className="section-count">{trending.length} characters</span>
-                            </div>
-                            <div className="character-row">
-                                {trending.map(renderCard)}
-                            </div>
-                        </section>
-                    )}
-
-                    {!showFavoritesOnly && recommended.length > 0 && (
-                        <section className="section">
-                            <div className="section-header">
-                                <h2 className="section-title">Recommended</h2>
-                                <span className="section-count">{recommended.length} characters</span>
-                            </div>
-                            <div className="character-row">
-                                {recommended.map(renderCard)}
-                            </div>
-                        </section>
-                    )}
-
                     <section className="section">
                         <div className="section-header">
                             <h2 className="section-title">
-                                {hasActiveFilters ? "Matching Characters" : "New Characters"}
+                                {hasActiveFilters ? "Matching Characters" : "All Characters"}
                             </h2>
                             <span className="section-count">{filteredCharacters.length} results</span>
                             {hasActiveFilters && (

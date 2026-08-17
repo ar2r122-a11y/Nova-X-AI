@@ -28,7 +28,7 @@ export default function CharacterCard({
     const hasValidImage = isValidImageUrl(avatar);
 
     return (
-        <div className="character-card" onClick={onClick}>
+        <div className={clsx("character-card", { selected: isFavorite })} onClick={onClick}>
             <div className="character-avatar">
                 {hasValidImage && !imgError ? (
                     <>
@@ -86,7 +86,7 @@ export default function CharacterCard({
                     <div className="card-traits">
                         {character.personality.traits.slice(0, 3).map((trait) => (
                             <span key={trait.name} className="trait-chip">
-                                {trait.name} <span className="trait-score">{trait.score.toFixed(1)}</span>
+                                {trait.name}
                             </span>
                         ))}
                     </div>

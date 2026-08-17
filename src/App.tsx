@@ -5,6 +5,7 @@ import CharacterCreate from "./pages/CharacterCreate";
 import CharacterDetail from "./pages/CharacterDetail";
 import Gallery from "./pages/Gallery";
 import Chat from "./pages/Chat";
+import Settings from "./pages/Settings";
 import AppShell from "./components/layout/AppShell";
 
 export default function App() {
@@ -18,6 +19,7 @@ export default function App() {
                     <Route path="/characters/:id" element={<CharacterDetail />} />
                     <Route path="/gallery" element={<Gallery />} />
                     <Route path="/chat" element={<Chat />} />
+                    <Route path="/settings" element={<Settings />} />
                 </Route>
                 <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>

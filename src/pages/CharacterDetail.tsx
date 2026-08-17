@@ -200,6 +200,27 @@ export default function CharacterDetail() {
     const primaryImage = characterImages.find((img) => img.selectedCandidateId) || characterImages[0];
     const primaryImageUri = primaryImage?.candidates.find((c) => c.id === primaryImage.selectedCandidateId)?.uri || primaryImage?.candidates[0]?.uri || character.avatarImageId;
 
+    const relationshipLevel = relationshipData
+        ? Math.round(((relationshipData.metrics?.trust || 0) + (relationshipData.metrics?.affinity || 0) + (relationshipData.metrics?.respect || 0) + (relationshipData.metrics?.loyalty || 0)) / 4 * 100)
+        : null;
+
+    const moodLabel = emotionData
+        ? emotionData.pleasure > 0.6
+            ? "Happy"
+            : emotionData.pleasure > 0.4
+            ? "Content"
+            : emotionData.arousal > 0.6
+            ? "Excited"
+            : "Calm"
+        : null;
+
+    const memoryHighlights = memoryData
+        ? memoryData.slice(0, 3).map((mem: any) => ({
+            content: mem.content,
+            type: mem.memoryType,
+          }))
+        : [];
+
     return (
         <div className="profile-page">
             <div className="profile-hero">
@@ -237,9 +258,6 @@ export default function CharacterDetail() {
                         )}
                         <button className="secondary" onClick={() => navigate("/gallery")}>
                             Gallery
-                        </button>
-                        <button className="primary" onClick={() => navigate("/characters/create")}>
-                            + New
                         </button>
                         <button className="primary" onClick={() => navigate(`/chat?characterId=${character.id}`)}>
                             Start Chat
@@ -292,80 +310,46 @@ export default function CharacterDetail() {
                             {character.personality.description && (
                                 <p className="section-text">{character.personality.description}</p>
                             )}
-                            {character.personality.speakingStyle && (
-                                <p className="section-text"><strong>Speaking Style:</strong> {character.personality.speakingStyle}</p>
-                            )}
                         </div>
                     )}
 
-                    {character.personality.interests.length > 0 && (
-                        <div className="profile-section">
-                            <h3 className="section-label">Interests</h3>
-                            <div className="trait-list">
-                                {character.personality.interests.map((interest) => (
-                                    <span key={interest} className="tag">{interest}</span>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
-                    {relationshipData && !loadingOptional && (
+                    {relationshipLevel !== null && !loadingOptional && (
                         <div className="profile-section">
                             <h3 className="section-label">Relationship</h3>
-                            <div className="relationship-grid">
-                                <div className="metric">
-                                    <span className="metric-label">Trust</span>
-                                    <div className="metric-bar">
-                                        <div className="metric-fill" style={{ width: `${Math.round(relationshipData.metrics?.trust * 100 || 0)}%` }} />
-                                    </div>
+                            <div className="relationship-summary">
+                                <div className="relationship-level">
+                                    <span className="relationship-level-value">{relationshipLevel}%</span>
+                                    <span className="relationship-level-label">Bond Strength</span>
                                 </div>
-                                <div className="metric">
-                                    <span className="metric-label">Affinity</span>
-                                    <div className="metric-bar">
-                                        <div className="metric-fill" style={{ width: `${Math.round(relationshipData.metrics?.affinity * 100 || 0)}%` }} />
-                                    </div>
-                                </div>
-                                <div className="metric">
-                                    <span className="metric-label">Respect</span>
-                                    <div className="metric-bar">
-                                        <div className="metric-fill" style={{ width: `${Math.round(relationshipData.metrics?.respect * 100 || 0)}%` }} />
-                                    </div>
-                                </div>
-                                <div className="metric">
-                                    <span className="metric-label">Loyalty</span>
-                                    <div className="metric-bar">
-                                        <div className="metric-fill" style={{ width: `${Math.round(relationshipData.metrics?.loyalty * 100 || 0)}%` }} />
-                                    </div>
-                                </div>
+                                <p className="section-text">
+                                    You and {character.name} share a growing connection. Keep chatting to deepen your bond.
+                                </p>
                             </div>
                         </div>
                     )}
 
-                    {emotionData && !loadingOptional && (
+                    {moodLabel && !loadingOptional && (
                         <div className="profile-section">
                             <h3 className="section-label">Mood</h3>
                             <div className="mood-display">
                                 <span className="mood-emoji">
-                                    {emotionData.pleasure && emotionData.arousal
-                                        ? emotionData.pleasure > 0.5 ? "😊" : emotionData.arousal > 0.5 ? "😤" : "😔"
-                                        : "😐"}
+                                    {emotionData.pleasure > 0.6 ? "😊" : emotionData.pleasure > 0.4 ? "😐" : "😔"}
                                 </span>
                                 <span className="mood-text">
-                                    {emotionData.pleasure !== undefined ? `Pleasure: ${(emotionData.pleasure * 100).toFixed(0)}%` : ""}
-                                    {emotionData.arousal !== undefined ? ` · Arousal: ${(emotionData.arousal * 100).toFixed(0)}%` : ""}
+                                    {character.name} is feeling <strong>{moodLabel}</strong>
                                 </span>
                             </div>
                         </div>
                     )}
 
-                    {memoryData && !loadingOptional && memoryData.length > 0 && (
+                    {memoryHighlights.length > 0 && !loadingOptional && (
                         <div className="profile-section">
                             <h3 className="section-label">Memories</h3>
                             <div className="memory-list">
-                                {memoryData.slice(0, 5).map((mem: any) => (
-                                    <div key={mem.memoryId} className="memory-item">
+                                {memoryHighlights.map((mem: any, idx: number) => (
+                                    <div key={idx} className="memory-item">
                                         <p className="memory-content">{mem.content}</p>
-                                        <span className="memory-type">{mem.memoryType}</span>
+                                        <span className="memory-type">{mem.type}</span>
                                     </div>
                                 ))}
                             </div>
