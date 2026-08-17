@@ -2,13 +2,9 @@ import { CharacterEngineClient } from "./CharacterEngineClient";
 import type { Character } from "../state/CharacterStore";
 
 export async function loadCharactersFromEngine(): Promise<Character[]> {
-    try {
-        const engine = await CharacterEngineClient.getEngine();
-        const aggregates = await engine.getActiveCharacters();
-        return aggregates.map((aggregate) => aggregateToCharacter(aggregate));
-    } catch {
-        return [];
-    }
+    const engine = await CharacterEngineClient.getEngine();
+    const aggregates = await engine.getActiveCharacters();
+    return aggregates.map((aggregate) => aggregateToCharacter(aggregate));
 }
 
 function aggregateToCharacter(aggregate: any): Character {

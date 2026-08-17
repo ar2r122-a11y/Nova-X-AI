@@ -1,4 +1,5 @@
 import type { Character } from "../../lib/state/CharacterStore";
+import { useState } from "react";
 import clsx from "clsx";
 
 export interface CharacterCardProps {
@@ -16,13 +17,14 @@ export default function CharacterCard({
     onToggleFavorite,
     onStartChat
 }: CharacterCardProps) {
+    const [imgError, setImgError] = useState(false);
     const avatar = character.avatarImageId;
 
     return (
         <div className="character-card" onClick={onClick}>
             <div className="character-avatar">
-                {avatar ? (
-                    <img src={avatar} alt={character.name} loading="lazy" />
+                {avatar && !imgError ? (
+                    <img src={avatar} alt={character.name} loading="lazy" onError={() => setImgError(true)} />
                 ) : (
                     <div className="avatar-placeholder">
                         <span>{character.name.charAt(0).toUpperCase()}</span>

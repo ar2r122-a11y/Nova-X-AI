@@ -6,6 +6,7 @@ import CharacterCard from "../components/features/CharacterCard";
 import clsx from "clsx";
 
 const CATEGORIES = ["All", "Fantasy", "Sci-Fi", "Romance", "Mystery", "Comedy", "Drama", "Action"];
+const LOAD_TIMEOUT = 15000;
 
 export default function Home() {
     const navigate = useNavigate();
@@ -25,17 +26,25 @@ export default function Home() {
     const [searchQuery, setSearchQuery] = useState("");
     const [activeCategory, setActiveCategory] = useState("All");
     const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
-    const [initialized, setInitialized] = useState(false);
 
     useEffect(() => {
-        if (initialized) return;
         let cancelled = false;
-        setInitialized(true);
+        let timeoutId: ReturnType<typeof setTimeout>;
+
         setLoading(true);
         setError(null);
+
+        timeoutId = setTimeout(() => {
+            if (!cancelled) {
+                setError("Character loading is taking longer than expected. Please check your connection and try again.");
+                setLoading(false);
+            }
+        }, LOAD_TIMEOUT);
+
         loadCharactersFromEngine()
             .then((fromEngine) => {
                 if (cancelled) return;
+                clearTimeout(timeoutId);
                 if (fromEngine.length > 0) {
                     mergeCharacters(fromEngine);
                 }
@@ -43,13 +52,16 @@ export default function Home() {
             })
             .catch((err) => {
                 if (cancelled) return;
+                clearTimeout(timeoutId);
                 setError(err instanceof Error ? err.message : "Failed to load characters");
                 setLoading(false);
             });
+
         return () => {
             cancelled = true;
+            clearTimeout(timeoutId);
         };
-    }, [mergeCharacters, setLoading, setError, initialized]);
+    }, [mergeCharacters, setLoading, setError]);
 
     const isFreshLoading = engineLoading && characters.length === 0;
 
