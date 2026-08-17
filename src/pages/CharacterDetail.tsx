@@ -2,6 +2,11 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAppStore } from "../lib/state/CharacterStore";
 import { ImageEngineClient } from "../lib/engine/ImageEngineClient";
+import { VoiceEngineClient } from "../lib/engine/VoiceEngineClient";
+import { RelationshipEngineClient } from "../lib/engine/RelationshipEngineClient";
+import { EmotionEngineClient } from "../lib/engine/EmotionEngineClient";
+import { MemoryEngineClient } from "../lib/engine/MemoryEngineClient";
+import clsx from "clsx";
 
 export default function CharacterDetail() {
     const { id } = useParams<{ id: string }>();
@@ -9,19 +14,104 @@ export default function CharacterDetail() {
     const characters = useAppStore((s) => s.characters);
     const images = useAppStore((s) => s.images);
     const addImage = useAppStore((s) => s.addImage);
-    const updateImage = useAppStore((s) => s.updateImage);
     const updateCharacter = useAppStore((s) => s.updateCharacter);
+    const toggleFavoriteCharacter = useAppStore((s) => s.toggleFavoriteCharacter);
+    const addRecentCharacter = useAppStore((s) => s.addRecentCharacter);
+    const isFavoriteCharacter = useAppStore((s) => s.isFavoriteCharacter);
     const setCurrentCharacterId = useAppStore((s) => s.setCurrentCharacterId);
+
     const [generating, setGenerating] = useState(false);
     const [prompt, setPrompt] = useState("");
-    const [editing, setEditing] = useState(false);
+    const [speaking, setSpeaking] = useState(false);
+    const [relationshipData, setRelationshipData] = useState<any>(null);
+    const [emotionData, setEmotionData] = useState<any>(null);
+    const [memoryData, setMemoryData] = useState<any>(null);
+    const [voiceAvailable, setVoiceAvailable] = useState(false);
+    const [loadingOptional, setLoadingOptional] = useState(true);
 
     const character = characters.find((c) => c.id === id);
     const characterImages = images.filter((img) => img.characterId === id);
+    const isFavorite = character ? isFavoriteCharacter(character.id) : false;
 
     useEffect(() => {
-        if (id) setCurrentCharacterId(id);
-    }, [id, setCurrentCharacterId]);
+        if (id) {
+            addRecentCharacter(id);
+            setCurrentCharacterId(id);
+        }
+    }, [id, addRecentCharacter, setCurrentCharacterId]);
+
+    useEffect(() => {
+        let mounted = true;
+        setLoadingOptional(true);
+
+        async function loadOptionalData() {
+            try {
+                const [voiceEngine, relationshipEngine, emotionEngine, memoryEngine] = await Promise.all([
+                    VoiceEngineClient.getEngine(),
+                    RelationshipEngineClient.getEngine(),
+                    EmotionEngineClient.getEngine(),
+                    MemoryEngineClient.getEngine(),
+                ]);
+
+                if (!mounted) return;
+
+                setVoiceAvailable(!!voiceEngine);
+
+                if (relationshipEngine && character) {
+                    try {
+                        const graph = await relationshipEngine.getSocialGraph(character.id);
+                        const characterRelationships = graph.relationships.filter(
+                            (r: any) => r.targetId === character.id || r.sourceId === character.id
+                        );
+                        if (characterRelationships.length > 0) {
+                            setRelationshipData(characterRelationships[0]);
+                        }
+                    } catch {
+                        // no relationship data
+                    }
+                }
+
+                if (emotionEngine && character) {
+                    try {
+                        const state = await emotionEngine.getEmotionalState(character.id);
+                        setEmotionData(state);
+                    } catch {
+                        // no emotion data
+                    }
+                }
+
+                if (memoryEngine && character) {
+                    try {
+                        const memories = await memoryEngine.getMemoriesForCharacter({
+                            ownerId: character.id,
+                            requesterId: character.id,
+                            limit: 10,
+                            minSalience: 0,
+                        });
+                        if (memories.length > 0) {
+                            setMemoryData(memories);
+                        }
+                    } catch {
+                        // no memory data
+                    }
+                }
+            } catch {
+                // optional engines unavailable
+            } finally {
+                if (mounted) {
+                    setLoadingOptional(false);
+                }
+            }
+        }
+
+        if (character) {
+            loadOptionalData();
+        }
+
+        return () => {
+            mounted = false;
+        };
+    }, [character?.id]);
 
     const handleGenerate = async () => {
         if (!character || !prompt.trim()) return;
@@ -65,21 +155,6 @@ export default function CharacterDetail() {
         }
     };
 
-    const handleSelectCandidate = async (imageId: string, candidateId: string) => {
-        try {
-            const engine = await ImageEngineClient.getEngine();
-            await engine.selectCandidate({
-                imageId,
-                candidateId,
-                requesterId: character!.id,
-                claims: { roles: ["user"], permissions: ["generate"] }
-            });
-            updateImage(imageId, { selectedCandidateId: candidateId });
-        } catch (err) {
-            console.error("Selection failed:", err);
-        }
-    };
-
     const handleSetPrimaryAvatar = async (imageId: string) => {
         if (!character) return;
         const imageRecord = characterImages.find((img) => img.id === imageId);
@@ -88,10 +163,31 @@ export default function CharacterDetail() {
         updateCharacter(character.id, { avatarImageId: avatarUri });
     };
 
+    const handleVoiceAction = async () => {
+        if (!character || !voiceAvailable) return;
+        setSpeaking(true);
+        try {
+            const engine = await VoiceEngineClient.getEngine();
+            if (!engine) return;
+            await engine.synthesizeSpeech({
+                voiceId: character.id,
+                text: character.personality.description || `Hello, I am ${character.name}.`,
+                voiceProfileId: character.id,
+                correlationId: `synth-${Date.now()}`,
+                causationId: "",
+                claims: { roles: ["user"], permissions: ["voice"] }
+            });
+        } catch (err) {
+            console.error("Voice synthesis failed:", err);
+        } finally {
+            setSpeaking(false);
+        }
+    };
+
     if (!character) {
         return (
-            <div className="page">
-                <div className="content">
+            <div className="profile-page">
+                <div className="profile-content">
                     <p>Character not found.</p>
                     <button className="primary" onClick={() => navigate("/home")}>
                         Go Home
@@ -101,78 +197,196 @@ export default function CharacterDetail() {
         );
     }
 
-    return (
-        <div className="page">
-            <nav className="navbar">
-                <button className="secondary" onClick={() => navigate("/home")}>
-                    ← Back
-                </button>
-                <h1>{character.name}</h1>
-                <div className="nav-buttons">
-                    <button className="secondary" onClick={() => setEditing(!editing)}>
-                        {editing ? "Done Editing" : "Edit"}
-                    </button>
-                    <button className="secondary" onClick={() => navigate("/gallery")}>
-                        Gallery
-                    </button>
-                    <button className="primary" onClick={() => navigate("/characters/create")}>
-                        + New
-                    </button>
-                    <button className="primary" onClick={() => navigate(`/chat?characterId=${character.id}`)}>
-                        Start Chat
-                    </button>
-                </div>
-            </nav>
+    const primaryImage = characterImages.find((img) => img.selectedCandidateId) || characterImages[0];
+    const primaryImageUri = primaryImage?.candidates.find((c) => c.id === primaryImage.selectedCandidateId)?.uri || primaryImage?.candidates[0]?.uri || character.avatarImageId;
 
-            <div className="content">
-                <div className="character-profile">
-                    <div className="profile-avatar">
-                        {character.avatarImageId ? (
-                            <img src={character.avatarImageId} alt={character.name} />
-                        ) : (
-                            <div className="avatar-placeholder-large">?</div>
-                        )}
-                    </div>
-                    <div className="profile-info">
-                        <h2>{character.name}</h2>
-                        {character.title && <p className="profile-title">{character.title}</p>}
-                        {character.description && <p className="profile-bio">{character.description}</p>}
-                        <div className="profile-meta">
-                            {character.age && <span>Age: {character.age}</span>}
-                            {character.gender && <span>Gender: {character.gender}</span>}
-                            {character.role && <span>Role: {character.role}</span>}
-                            {character.language && <span>Language: {character.language}</span>}
+    const relationshipLevel = relationshipData
+        ? Math.round(((relationshipData.metrics?.trust || 0) + (relationshipData.metrics?.affinity || 0) + (relationshipData.metrics?.respect || 0) + (relationshipData.metrics?.loyalty || 0)) / 4 * 100)
+        : null;
+
+    const moodLabel = emotionData
+        ? emotionData.pleasure > 0.6
+            ? "Happy"
+            : emotionData.pleasure > 0.4
+            ? "Content"
+            : emotionData.arousal > 0.6
+            ? "Excited"
+            : "Calm"
+        : null;
+
+    const memoryHighlights = memoryData
+        ? memoryData.slice(0, 3).map((mem: any) => ({
+            content: mem.content,
+            type: mem.memoryType,
+          }))
+        : [];
+
+    return (
+        <div className="profile-page">
+            <div className="profile-hero">
+                <div className="profile-hero-bg">
+                    {primaryImageUri ? (
+                        <img src={primaryImageUri} alt={character.name} />
+                    ) : (
+                        <div className="profile-hero-placeholder">
+                            <span>{character.name.charAt(0).toUpperCase()}</span>
                         </div>
-                        {character.tags.length > 0 && (
+                    )}
+                    <div className="profile-hero-gradient" />
+                </div>
+                <div className="profile-hero-actions">
+                    <button className="secondary" onClick={() => navigate("/home")}>
+                        ← Back
+                    </button>
+                    <div className="profile-hero-buttons">
+                        <button
+                            className={clsx("icon-btn", { active: isFavorite })}
+                            onClick={() => toggleFavoriteCharacter(character.id)}
+                            aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+                        >
+                            {isFavorite ? "♥" : "♡"}
+                        </button>
+                        {voiceAvailable && (
+                            <button
+                                className="icon-btn"
+                                onClick={handleVoiceAction}
+                                disabled={speaking}
+                                aria-label="Play voice"
+                            >
+                                {speaking ? "🔊..." : "🔊"}
+                            </button>
+                        )}
+                        <button className="secondary" onClick={() => navigate("/gallery")}>
+                            Gallery
+                        </button>
+                        <button className="primary" onClick={() => navigate(`/chat?characterId=${character.id}`)}>
+                            Start Chat
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div className="profile-content">
+                <div className="profile-header">
+                    <div className="profile-avatar-section">
+                        <div className="profile-avatar-large">
+                            {character.avatarImageId ? (
+                                <img src={character.avatarImageId} alt={character.name} />
+                            ) : (
+                                <div className="avatar-placeholder-large">
+                                    <span>{character.name.charAt(0).toUpperCase()}</span>
+                                </div>
+                            )}
+                        </div>
+                        <div className="profile-primary-info">
+                            <h1 className="profile-name">{character.name}</h1>
+                            {character.title && <p className="profile-title">{character.title}</p>}
+                            <p className="profile-description">{character.description}</p>
+                            <div className="profile-meta">
+                                {character.age && <span className="meta-chip">Age: {character.age}</span>}
+                                {character.gender && <span className="meta-chip">Gender: {character.gender}</span>}
+                                {character.role && <span className="meta-chip">Role: {character.role}</span>}
+                                {character.origin && <span className="meta-chip">Origin: {character.origin}</span>}
+                                {character.language && <span className="meta-chip">Language: {character.language}</span>}
+                            </div>
                             <div className="profile-tags">
                                 {character.tags.map((tag) => (
                                     <span key={tag} className="tag">{tag}</span>
                                 ))}
                             </div>
-                        )}
-                        {character.personality.traits.length > 0 && (
-                            <div className="profile-traits">
-                                <h4>Personality</h4>
-                                <div className="trait-list">
-                                    {character.personality.traits.map((t) => (
-                                        <span key={t.name} className="trait-chip">{t.name}</span>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-                        {character.appearance.clothing && (
-                            <div className="profile-appearance">
-                                <h4>Appearance</h4>
-                                <p>{character.appearance.bodyType} {character.appearance.bodySize} build, {character.appearance.height} tall</p>
-                                <p>{character.appearance.hairLength} {character.appearance.hairStyle} {character.appearance.hairColor} hair, {character.appearance.eyeColor} eyes</p>
-                                <p>Wearing {character.appearance.clothing.toLowerCase()}</p>
-                            </div>
-                        )}
+                        </div>
                     </div>
                 </div>
 
-                <div className="image-generation">
-                    <h3>Generate Images</h3>
+                <div className="profile-sections">
+                    {character.personality.traits.length > 0 && (
+                        <div className="profile-section">
+                            <h3 className="section-label">Personality</h3>
+                            <div className="trait-list">
+                                {character.personality.traits.map((t) => (
+                                    <span key={t.name} className="trait-chip">{t.name}</span>
+                                ))}
+                            </div>
+                            {character.personality.description && (
+                                <p className="section-text">{character.personality.description}</p>
+                            )}
+                        </div>
+                    )}
+
+                    {relationshipLevel !== null && !loadingOptional && (
+                        <div className="profile-section">
+                            <h3 className="section-label">Relationship</h3>
+                            <div className="relationship-summary">
+                                <div className="relationship-level">
+                                    <span className="relationship-level-value">{relationshipLevel}%</span>
+                                    <span className="relationship-level-label">Bond Strength</span>
+                                </div>
+                                <p className="section-text">
+                                    You and {character.name} share a growing connection. Keep chatting to deepen your bond.
+                                </p>
+                            </div>
+                        </div>
+                    )}
+
+                    {moodLabel && !loadingOptional && (
+                        <div className="profile-section">
+                            <h3 className="section-label">Mood</h3>
+                            <div className="mood-display">
+                                <span className="mood-emoji">
+                                    {emotionData.pleasure > 0.6 ? "😊" : emotionData.pleasure > 0.4 ? "😐" : "😔"}
+                                </span>
+                                <span className="mood-text">
+                                    {character.name} is feeling <strong>{moodLabel}</strong>
+                                </span>
+                            </div>
+                        </div>
+                    )}
+
+                    {memoryHighlights.length > 0 && !loadingOptional && (
+                        <div className="profile-section">
+                            <h3 className="section-label">Memories</h3>
+                            <div className="memory-list">
+                                {memoryHighlights.map((mem: any, idx: number) => (
+                                    <div key={idx} className="memory-item">
+                                        <p className="memory-content">{mem.content}</p>
+                                        <span className="memory-type">{mem.type}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                <div className="profile-section">
+                    <h3 className="section-label">Gallery</h3>
+                    {characterImages.length === 0 ? (
+                        <p className="section-text">No images generated yet.</p>
+                    ) : (
+                        <div className="gallery-grid">
+                            {characterImages.map((img) => (
+                                <div key={img.id} className="gallery-card">
+                                    <img
+                                        src={img.candidates.find((c) => c.id === img.selectedCandidateId)?.uri || img.candidates[0]?.uri}
+                                        alt={img.prompt}
+                                    />
+                                    <div className="gallery-card-actions">
+                                        {img.selectedCandidateId && (
+                                            <button
+                                                className="primary small"
+                                                onClick={() => handleSetPrimaryAvatar(img.id)}
+                                            >
+                                                Set Avatar
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+
+                <div className="profile-section">
+                    <h3 className="section-label">Generate Image</h3>
                     <div className="generation-form">
                         <input
                             type="text"
@@ -190,50 +404,6 @@ export default function CharacterDetail() {
                         </button>
                     </div>
                 </div>
-
-                {characterImages.length > 0 && (
-                    <div className="candidate-grid">
-                        <h3>Generated Images</h3>
-                        <div className="grid">
-                            {characterImages.map((img) => (
-                                <div key={img.id} className="image-card">
-                                    <div className="image-preview">
-                                        {img.candidates.map((candidate) => (
-                                            <div
-                                                key={candidate.id}
-                                                className={`candidate ${img.selectedCandidateId === candidate.id ? "selected" : ""}`}
-                                            >
-                                                 <img src={candidate.uri} alt="Candidate" />
-                                                <span className="score">Score: {candidate.score.toFixed(2)}</span>
-                                                {img.status === "Completed" && (
-                                                    <button
-                                                        className="select-btn"
-                                                        onClick={() => handleSelectCandidate(img.id, candidate.id)}
-                                                    >
-                                                        {img.selectedCandidateId === candidate.id ? "Selected" : "Select"}
-                                                    </button>
-                                                )}
-                                            </div>
-                                        ))}
-                                    </div>
-                                    <div className="image-actions">
-                                        {img.selectedCandidateId && (
-                                            <button
-                                                className="primary"
-                                                onClick={() => handleSetPrimaryAvatar(img.id)}
-                                            >
-                                                Set as Avatar
-                                            </button>
-                                        )}
-                                        <button className="secondary" onClick={() => navigate(`/gallery?image=${img.id}`)}>
-                                            View
-                                        </button>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
             </div>
         </div>
     );
