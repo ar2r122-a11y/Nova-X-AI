@@ -10,6 +10,11 @@ export interface CharacterCardProps {
     onStartChat: (e: React.MouseEvent) => void;
 }
 
+function isValidImageUrl(url: string | null): boolean {
+    if (!url) return false;
+    return url.startsWith("http://") || url.startsWith("https://") || url.startsWith("data:image/");
+}
+
 export default function CharacterCard({
     character,
     isFavorite,
@@ -18,16 +23,29 @@ export default function CharacterCard({
     onStartChat
 }: CharacterCardProps) {
     const [imgError, setImgError] = useState(false);
+    const [imgLoaded, setImgLoaded] = useState(false);
     const avatar = character.avatarImageId;
+    const hasValidImage = isValidImageUrl(avatar);
 
     return (
         <div className="character-card" onClick={onClick}>
             <div className="character-avatar">
-                {avatar && !imgError ? (
-                    <img src={avatar} alt={character.name} loading="lazy" onError={() => setImgError(true)} />
+                {hasValidImage && !imgError ? (
+                    <>
+                        {!imgLoaded && <div className="avatar-loading" aria-hidden="true" />}
+                        <img
+                            src={avatar!}
+                            alt={character.name}
+                            loading="lazy"
+                            onError={() => setImgError(true)}
+                            onLoad={() => setImgLoaded(true)}
+                            className={imgLoaded ? "loaded" : ""}
+                        />
+                    </>
                 ) : (
-                    <div className="avatar-placeholder">
-                        <span>{character.name.charAt(0).toUpperCase()}</span>
+                    <div className="avatar-fallback">
+                        <span className="avatar-fallback-icon" aria-hidden="true">✦</span>
+                        <span className="avatar-fallback-initial">{character.name.charAt(0).toUpperCase()}</span>
                     </div>
                 )}
                 <div className="card-overlay">
